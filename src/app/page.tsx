@@ -851,7 +851,17 @@ export default async function Home() {
             <p>
               © {new Date().getFullYear()} Care Circle. All rights reserved.
             </p>
-            <p>PromptWars x Catalyst · Build with AI</p>
+            <p>
+              PromptWars x Catalyst · Built by{" "}
+              <a
+                href="https://github.com/CodeWithTanim"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal-200 hover:text-white underline font-semibold transition-colors"
+              >
+                CodeWithTanim
+              </a>
+            </p>
           </div>
         </div>
       </footer>
