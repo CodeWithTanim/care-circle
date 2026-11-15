@@ -20,6 +20,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+const TICKER_ITEMS = [
+  "★ Medication Coordination",
+  "Compassionate Care",
+  "Family Transparency",
+  "Passcode Invitations",
+  '"I\'ll Handle This" Alerts',
+  "Doctor Appointments",
+  "Elder Dignity & Consent",
+  "Cloud Scheduler Reminders",
+  "Adherence Analytics",
+  "Proactive Notifications",
+];
+
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-teal-100 selection:text-teal-900">
@@ -255,24 +268,41 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ─── Wave Ribbon Ticker ────────────────────────────────────────── */}
-        <div className="relative z-10 -my-3 overflow-hidden bg-[#0f4c47] py-4 text-white shadow-md">
-          <div className="flex w-max animate-pulse items-center gap-8 px-4 text-xs sm:text-sm font-bold uppercase tracking-wider">
-            <span>★ Medication Coordination</span>
-            <span className="opacity-40">•</span>
-            <span>Compassionate Care</span>
-            <span className="opacity-40">•</span>
-            <span>Family Transparency</span>
-            <span className="opacity-40">•</span>
-            <span>Passcode Invitations</span>
-            <span className="opacity-40">•</span>
-            <span>&ldquo;I&apos;ll Handle This&rdquo; Alerts</span>
-            <span className="opacity-40">•</span>
-            <span>Doctor Appointments</span>
-            <span className="opacity-40">•</span>
-            <span>Elder Dignity &amp; Consent</span>
-            <span className="opacity-40">•</span>
-            <span>Cloud Scheduler Reminders</span>
+        {/* ─── Wave Ribbon Ticker (Scrolling Right-to-Left) ─────────────── */}
+        <div
+          className="relative z-10 -my-3 overflow-hidden bg-[#0f4c47] py-4 text-white shadow-md select-none"
+          role="region"
+          aria-label="Care Circle Highlights Ticker"
+        >
+          <div className="animate-marquee flex items-center">
+            {/* First Sequence */}
+            <div className="flex items-center gap-8 shrink-0 pr-8 text-xs sm:text-sm font-bold uppercase tracking-wider">
+              {TICKER_ITEMS.map((item, idx) => (
+                <span
+                  key={`ticker-1-${idx}`}
+                  className="flex items-center gap-8 whitespace-nowrap"
+                >
+                  <span>{item}</span>
+                  <span className="opacity-40 text-teal-300">•</span>
+                </span>
+              ))}
+            </div>
+
+            {/* Duplicate Sequence for seamless continuous infinite loop */}
+            <div
+              className="flex items-center gap-8 shrink-0 pr-8 text-xs sm:text-sm font-bold uppercase tracking-wider"
+              aria-hidden="true"
+            >
+              {TICKER_ITEMS.map((item, idx) => (
+                <span
+                  key={`ticker-2-${idx}`}
+                  className="flex items-center gap-8 whitespace-nowrap"
+                >
+                  <span>{item}</span>
+                  <span className="opacity-40 text-teal-300">•</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
