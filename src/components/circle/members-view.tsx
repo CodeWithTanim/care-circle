@@ -369,7 +369,7 @@ export function MembersView({
           </h3>
           <p className="text-sm text-muted-foreground">
             Share these passcodes securely with the invited member. Passcodes
-            are hashed in storage for privacy and expire automatically.
+            are encrypted for privacy and expire automatically.
           </p>
 
           <div className="grid gap-3">

@@ -301,8 +301,8 @@ export function SettingsView({
                 Time Zone &amp; Local Schedule Time
               </CardTitle>
               <CardDescription>
-                Medication doses and reminders are scheduled deterministically
-                in this time zone.
+                Medication doses and reminders are scheduled accurately in this
+                time zone.
               </CardDescription>
             </div>
           </div>

@@ -729,8 +729,8 @@ export function DashboardView({
 
             <p className="text-xs text-muted-foreground leading-relaxed">
               Clicking <strong>Load Evaluation Scenario</strong> will populate
-              Eleanor Vance&apos;s records into this circle (safe &amp;
-              idempotent) and switch to the <em>Today</em> view.
+              Eleanor Vance&apos;s records into this circle safely and switch to
+              the <em>Today</em> view.
             </p>
           </div>
 

@@ -112,7 +112,7 @@ export default async function Home() {
                       className="size-4 text-[#0f4c47]"
                       aria-hidden="true"
                     />
-                    Hashed Passcode Invitations
+                    Secure Passcode Access
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2
@@ -444,8 +444,8 @@ export default async function Home() {
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Configure dosages, specific 24-hr daily times, and special
-                    instructions. Doses are deterministically generated in the
-                    local IANA time zone.
+                    instructions. Doses are automatically organized in the local
+                    IANA time zone.
                   </p>
                 </CardContent>
               </Card>
@@ -477,9 +477,9 @@ export default async function Home() {
                     &ldquo;I&apos;ll Handle This&rdquo; Follow-up
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Atomic claiming ensures that when an unconfirmed dose
-                    occurs, simultaneous family members cannot duplicate
-                    follow-up efforts.
+                    One-click claiming ensures that when a dose needs follow-up,
+                    family members coordinate instantly without overlapping
+                    efforts.
                   </p>
                 </CardContent>
               </Card>
@@ -494,9 +494,8 @@ export default async function Home() {
                     Proactive Email Reminders
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Idempotent delivery queue powered by Google Cloud Scheduler
-                    sends reminders for upcoming doses, missed medications, and
-                    doctor visits.
+                    Automated smart notifications send gentle reminders for
+                    upcoming doses, overdue medications, and doctor visits.
                   </p>
                 </CardContent>
               </Card>
@@ -742,8 +741,8 @@ export default async function Home() {
                       Free Forever for Families
                     </p>
                     <p className="text-xs text-teal-100">
-                      PromptWars x Catalyst hackathon project with real MongoDB
-                      persistence.
+                      Created for families to coordinate daily eldercare with
+                      complete peace of mind.
                     </p>
                   </div>
                 </div>
@@ -772,7 +771,7 @@ export default async function Home() {
                 seamlessly informed.
               </p>
               <div className="text-xs text-teal-300/70 pt-2">
-                Designed for Google Cloud Run &amp; Cloud Scheduler.
+                Built for seamless family care coordination.
               </div>
             </div>
 
@@ -823,10 +822,10 @@ export default async function Home() {
                 Core Capabilities
               </p>
               <ul className="space-y-2 text-sm text-teal-200/80">
-                <li>Deterministic Dose Occurrences</li>
-                <li>&ldquo;I&apos;ll Handle This&rdquo; Atomic Claims</li>
+                <li>Automated Schedule Tracking</li>
+                <li>&ldquo;I&apos;ll Handle This&rdquo; Follow-up Claiming</li>
                 <li>Doctor Appointment Tracking</li>
-                <li>Cloud Scheduler Reminders</li>
+                <li>Proactive Care Notifications</li>
                 <li>Elder Sharing Consent Directives</li>
               </ul>
             </div>
@@ -842,7 +841,7 @@ export default async function Home() {
                 (e.g. 911 / 112) immediately.
               </p>
               <p className="text-xs text-teal-300 pt-2 font-medium">
-                Protected with Better Auth &amp; hashed passcodes.
+                Protected with secure encryption &amp; private access.
               </p>
             </div>
           </div>
