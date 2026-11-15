@@ -195,3 +195,182 @@ Respond STRICTLY with a valid JSON object matching this structure (no markdown f
     source: "Care Circle Verified Clinical Knowledgebase",
   };
 }
+
+export function hasGeminiApiKey(): boolean {
+  return Boolean(
+    process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0,
+  );
+}
+
+export interface CareAiAnswer {
+  answer: string;
+  source:
+    "Google Gemini 2.5 Flash" | "Care Circle Verified Clinical Knowledgebase";
+  suggestedFollowUps: string[];
+  disclaimer: string;
+}
+
+export async function askGeminiCareQuestion(params: {
+  question: string;
+  circleName?: string;
+  recipientName?: string;
+  medicationsSummary?: string;
+}): Promise<CareAiAnswer> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const recipient = params.recipientName || "the care recipient";
+
+  if (apiKey) {
+    try {
+      const prompt = `You are an empathetic, highly trained eldercare communication specialist on the Care Circle platform.
+Care Recipient (Elder): ${recipient}
+Known Regimen/Circle: ${params.circleName || "Family Care Circle"} (${params.medicationsSummary || "Standard elder daily healthcare routine"})
+
+User Question: "${params.question}"
+
+Guidelines:
+1. Provide a warm, clear, plain-language, non-technical explanation suitable for family caregivers and seniors.
+2. Focus on food guidelines, hydration, routine adherence, gentle care tips, and communication.
+3. NEVER prescribe, NEVER diagnose, and NEVER advise changing doses without a doctor.
+4. Keep the answer structured and easy to read (max 3-4 short paragraphs or bullet points).
+5. Always remind the caregiver to consult the recipient's primary doctor for medical decisions.
+
+Respond STRICTLY with a valid JSON object matching this structure (no markdown fences, just JSON):
+{
+  "answer": "Clear, formatted explanation...",
+  "suggestedFollowUps": ["Follow-up question 1?", "Follow-up question 2?"]
+}`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.3,
+              responseMimeType: "application/json",
+            },
+          }),
+          signal: AbortSignal.timeout(8000),
+        },
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        const text =
+          data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        const parsed = JSON.parse(text);
+        if (parsed.answer) {
+          return {
+            answer: parsed.answer,
+            source: "Google Gemini 2.5 Flash",
+            suggestedFollowUps: Array.isArray(parsed.suggestedFollowUps)
+              ? parsed.suggestedFollowUps
+              : [],
+            disclaimer:
+              "Informational care guidance powered by Google Gemini. Always follow prescribing doctor directives.",
+          };
+        }
+      }
+    } catch {
+      // Fall through to knowledgebase
+    }
+  }
+
+  // Clinical Knowledgebase Fallback
+  const q = params.question.toLowerCase();
+
+  if (q.includes("miss") || q.includes("forgot") || q.includes("late")) {
+    return {
+      answer: `When a dose is missed:
+1. **Never double up:** Do not take two doses at once to make up for a missed scheduled time.
+2. **Timing Window:** If you remember within 1 to 2 hours of the scheduled time, take it right away with water. If it is already close to the next scheduled dose, skip the missed dose and resume normal schedule.
+3. **Care Coordination:** Use the Care Circle alert to click "I'll handle this" so other family members know it is being managed and avoid accidental double administration.
+4. **Call Doctor or Pharmacist:** If ever unsure about specific medication windows, contact the primary doctor or local pharmacy.`,
+      source: "Care Circle Verified Clinical Knowledgebase",
+      suggestedFollowUps: [
+        `How do I confirm a dose in Care Circle?`,
+        `Should blood pressure medicine be taken at night if missed in the morning?`,
+      ],
+      disclaimer:
+        "Informational care guidance. Never adjust or double doses without clinical advice.",
+    };
+  }
+
+  if (
+    q.includes("food") ||
+    q.includes("eat") ||
+    q.includes("meal") ||
+    q.includes("breakfast") ||
+    q.includes("dinner")
+  ) {
+    return {
+      answer: `Meal and Food Considerations for ${recipient}:
+- **Metformin:** Always take with or immediately following a full meal (breakfast or dinner) to protect the stomach and prevent nausea.
+- **Lisinopril / Blood Pressure:** Can be taken with or without food. Drink a full 8 oz glass of water. Avoid salt substitutes with excess potassium unless approved by a physician.
+- **Vitamin D3:** Absorbed best when taken with a meal containing healthy dietary fats (like avocado, eggs, or milk).
+- **Consistency:** Taking medications at the same point during daily meal routines creates strong memory anchors for seniors.`,
+      source: "Care Circle Verified Clinical Knowledgebase",
+      suggestedFollowUps: [
+        `Can vitamins be taken at the same time as prescription medicines?`,
+        `What foods should be avoided with blood pressure medication?`,
+      ],
+      disclaimer:
+        "Informational care guidance. Always verify dietary changes with your healthcare provider.",
+    };
+  }
+
+  if (q.includes("water") || q.includes("hydrat") || q.includes("drink")) {
+    return {
+      answer: `Hydration Best Practices for Seniors:
+- **Daily Target:** Aim for 5 to 7 glasses (approximately 1.5 to 2 liters) of fluid daily, unless your doctor has prescribed fluid restrictions for heart failure or kidney conditions.
+- **Visual Cues:** Keep a fresh pitcher or lightweight tumbler within easy arm's reach of ${recipient}'s favorite chair.
+- **Medicine Pairing:** Each tablet should always be swallowed with a full glass of plain water to ensure it dissolves properly in the stomach.
+- **Track Progress:** Log daily water glasses in Care Circle's Daily Vitals tracker on the Today view.`,
+      source: "Care Circle Verified Clinical Knowledgebase",
+      suggestedFollowUps: [
+        `What are signs of mild dehydration in elderly individuals?`,
+        `How does proper hydration affect blood pressure readings?`,
+      ],
+      disclaimer:
+        "Informational care guidance. Follow physician-specified fluid limits if heart or kidney conditions exist.",
+    };
+  }
+
+  if (
+    q.includes("pressure") ||
+    q.includes("bp") ||
+    q.includes("dizz") ||
+    q.includes("standing")
+  ) {
+    return {
+      answer: `Blood Pressure & Fall Prevention Routine:
+- **Rise Slowly:** When transitioning from bed or chair, sit on the edge for 30 to 60 seconds before standing up. This prevents orthostatic lightheadedness common with blood pressure medications like Lisinopril.
+- **Consistent Log:** Check and record blood pressure at the same time every morning (before medication and breakfast) using the Care Circle Vitals tracker.
+- **Doctor Checkpoints:** Note any readings above 140/90 or below 100/60 to discuss with the cardiologist or primary doctor.`,
+      source: "Care Circle Verified Clinical Knowledgebase",
+      suggestedFollowUps: [
+        `What is the ideal blood pressure range for an elder over 70?`,
+        `How to prepare for an upcoming cardiology appointment?`,
+      ],
+      disclaimer:
+        "Informational care guidance. For sudden severe dizziness, chest pain, or fainting, contact emergency services immediately.",
+    };
+  }
+
+  return {
+    answer: `Here is care coordination guidance for ${recipient}:
+- **Routine Consistency:** Keep daily medication schedules aligned with regular daily anchors (breakfast, afternoon walk, bedtime).
+- **Circle Collaboration:** Family members can view today's schedule, record vitals, and handle alerts together in the Care Circle dashboard.
+- **Medical Documentation:** Use the Doctor Visit Summary tool in the Medications or Appointments view before physician visits to bring a complete list of current medications and adherence records.`,
+    source: "Care Circle Verified Clinical Knowledgebase",
+    suggestedFollowUps: [
+      `What are the food guidelines for current medications?`,
+      `How do I print a doctor's visit summary?`,
+      `What to do if a dose is missed?`,
+    ],
+    disclaimer:
+      "Informational care guidance. Consult a licensed healthcare provider for all medical decisions.",
+  };
+}

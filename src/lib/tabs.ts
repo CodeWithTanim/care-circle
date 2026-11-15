@@ -4,6 +4,7 @@ export type DashboardTab =
   | "appointments"
   | "members"
   | "adherence"
+  | "ai"
   | "settings";
 
 export const VALID_TABS: readonly DashboardTab[] = [
@@ -12,6 +13,7 @@ export const VALID_TABS: readonly DashboardTab[] = [
   "appointments",
   "members",
   "adherence",
+  "ai",
   "settings",
 ] as const;
 

@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import type { Circle, CircleRole, Membership } from "@/lib/models";
 import { isValidTab, type DashboardTab } from "@/lib/tabs";
 import { AdherenceView } from "./adherence-view";
+import { AiAssistantView } from "./ai-assistant-view";
 import { AppointmentsView } from "./appointments-view";
 import { MedicationsView } from "./medications-view";
 import { MembersView } from "./members-view";
@@ -100,6 +101,12 @@ const NAV_ITEMS: Array<{
     label: "Adherence",
     icon: Activity,
     description: "History & routines",
+  },
+  {
+    id: "ai",
+    label: "Gemini AI",
+    icon: Sparkles,
+    description: "Care & medication intelligence",
   },
   {
     id: "settings",
@@ -632,6 +639,8 @@ export function DashboardView({
           {activeTab === "adherence" && (
             <AdherenceView circle={currentCircle} />
           )}
+
+          {activeTab === "ai" && <AiAssistantView circle={currentCircle} />}
 
           {activeTab === "settings" && (
             <SettingsView

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMedicationAiGuide } from "@/lib/gemini-ai";
+import { askGeminiCareQuestion, getMedicationAiGuide } from "@/lib/gemini-ai";
 
 describe("Gemini AI Care Assistant & Medication Guide", () => {
   it("generates clinical knowledgebase guidance for Lisinopril", async () => {
@@ -40,5 +40,29 @@ describe("Gemini AI Care Assistant & Medication Guide", () => {
     expect(guide.purpose).toBeTruthy();
     expect(guide.foodGuidelines).toContain("Take with breakfast");
     expect(guide.disclaimer.toLowerCase()).toContain("never adjust dosages");
+  });
+
+  it("answers eldercare care questions with knowledgebase fallback", async () => {
+    const res = await askGeminiCareQuestion({
+      question: "What should we do if Eleanor misses her morning dose?",
+      circleName: "Vance Family Circle",
+      recipientName: "Eleanor Vance",
+      medicationsSummary: "Lisinopril 10mg, Metformin 500mg",
+    });
+
+    expect(res.answer.toLowerCase()).toContain("never double");
+    expect(res.source).toBeTruthy();
+    expect(res.suggestedFollowUps.length).toBeGreaterThan(0);
+    expect(res.disclaimer.toLowerCase()).toContain("informational");
+  });
+
+  it("answers hydration and water routine questions safely", async () => {
+    const res = await askGeminiCareQuestion({
+      question: "How much water should Eleanor drink each day?",
+      recipientName: "Eleanor Vance",
+    });
+
+    expect(res.answer.toLowerCase()).toContain("hydration");
+    expect(res.answer).toContain("glasses");
   });
 });
