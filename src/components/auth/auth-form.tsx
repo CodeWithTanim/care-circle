@@ -259,7 +259,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             </>
           ) : (
             <>
-              <span>{isSignUp ? "Create account" : "Sign in to account"}</span>
+              <span>{isSignUp ? "Create account" : "Sign in"}</span>
               <ArrowRight className="ml-2 size-4" aria-hidden="true" />
             </>
           )}

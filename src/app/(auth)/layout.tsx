@@ -1,13 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  HeartHandshake,
-  Lock,
-  ShieldCheck,
-  Star,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, HeartHandshake } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -58,106 +50,21 @@ export default function AuthLayout({
           </Link>
         </div>
 
-        {/* Center Showcase Content */}
-        <div className="relative z-10 space-y-6 my-auto py-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-teal-300/25 bg-teal-900/40 px-3.5 py-1.5 text-xs font-medium text-teal-100 backdrop-blur-xs">
-            <span
-              className="size-2 rounded-full bg-emerald-400 animate-pulse"
-              aria-hidden="true"
-            />
-            <span>Dignified Family Care Coordination</span>
-          </div>
-
+        {/* Center Showcase Content (Clean & Minimal) */}
+        <div className="relative z-10 space-y-4 my-auto py-12 max-w-md">
           <h2 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
-            A calmer way to care for the ones who cared for you.
+            A calmer way to care for the ones you love.
           </h2>
 
-          <p className="text-sm xl:text-base text-teal-100/80 leading-relaxed max-w-md">
-            Coordinate daily medications, schedule doctor visits, and handle
-            alerts in one shared space — with the elder always in complete
-            control.
+          <p className="text-base text-teal-100/80 leading-relaxed">
+            Medication routines, doctor visits, and daily vitals in one shared
+            family circle.
           </p>
-
-          {/* Feature Highlights */}
-          <div className="space-y-3 pt-2 text-xs xl:text-sm text-teal-100/90 font-medium">
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2
-                className="size-4.5 text-emerald-400 shrink-0"
-                aria-hidden="true"
-              />
-              <span>100% elder consent and full dignity controls</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2
-                className="size-4.5 text-emerald-400 shrink-0"
-                aria-hidden="true"
-              />
-              <span>
-                Instant &ldquo;I&apos;ll Handle This&rdquo; caregiver alert
-                claim
-              </span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2
-                className="size-4.5 text-emerald-400 shrink-0"
-                aria-hidden="true"
-              />
-              <span>Secure passcode invitations with zero spam</span>
-            </div>
-          </div>
-
-          {/* Testimonial Quote Card */}
-          <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4.5 backdrop-blur-md shadow-xl text-xs space-y-2.5">
-            <div className="flex items-center gap-1 text-amber-300">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className="size-3.5 fill-current"
-                  aria-hidden="true"
-                />
-              ))}
-            </div>
-            <p className="text-teal-50 italic leading-relaxed">
-              &ldquo;Before Care Circle, we constantly worried if Mom remembered
-              her blood pressure medicine. Now everyone in our family stays
-              synced with total peace of mind.&rdquo;
-            </p>
-            <div className="flex items-center gap-2.5 pt-1 border-t border-white/10">
-              <div className="flex size-7 items-center justify-center rounded-full bg-teal-500/30 text-white font-bold text-[11px] border border-white/20">
-                SK
-              </div>
-              <div>
-                <p className="font-semibold text-white text-[12px] leading-none">
-                  Sarah K. &amp; Family
-                </p>
-                <p className="text-[11px] text-teal-200/80 mt-0.5">
-                  Primary Family Caregiver
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Footer Metrics */}
-        <div className="relative z-10 pt-4 border-t border-white/15 grid grid-cols-3 gap-3 text-center">
-          <div>
-            <p className="text-lg xl:text-xl font-extrabold text-white">
-              8,000+
-            </p>
-            <p className="text-[11px] text-teal-200/80">Active Circles</p>
-          </div>
-          <div>
-            <p className="text-lg xl:text-xl font-extrabold text-white">
-              99.4%
-            </p>
-            <p className="text-[11px] text-teal-200/80">Adherence</p>
-          </div>
-          <div>
-            <p className="text-lg xl:text-xl font-extrabold text-white">
-              256-bit
-            </p>
-            <p className="text-[11px] text-teal-200/80">Encrypted</p>
-          </div>
+        {/* Footer Note */}
+        <div className="relative z-10 pt-4 border-t border-white/15 text-xs text-teal-200/70">
+          Private, secure, and always centered around the elder.
         </div>
       </aside>
 
@@ -203,25 +110,9 @@ export default function AuthLayout({
           <div className="w-full max-w-md mx-auto">{children}</div>
         </div>
 
-        {/* Bottom Trust Indicators */}
-        <footer className="w-full max-w-md mx-auto lg:max-w-none pt-4 border-t border-border/60">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck
-                className="size-4 text-[#0f4c47]"
-                aria-hidden="true"
-              />
-              HIPAA-aligned principles
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Lock className="size-4 text-[#0f4c47]" aria-hidden="true" />
-              End-to-end encrypted
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Users className="size-4 text-[#0f4c47]" aria-hidden="true" />
-              Family-first privacy
-            </span>
-          </div>
+        {/* Bottom Trust Indicators (Clean & Simple) */}
+        <footer className="w-full max-w-md mx-auto lg:max-w-none pt-4 text-center text-xs text-muted-foreground">
+          Protected with secure encryption &amp; private access
         </footer>
       </main>
     </div>
