@@ -93,7 +93,10 @@ export async function updateCircle(params: {
   circleId: string;
   input: unknown;
 }): Promise<Circle> {
-  await requireCircleAccess(params.userId, params.circleId, ["owner"]);
+  await requireCircleAccess(params.userId, params.circleId, [
+    "owner",
+    "caregiver",
+  ]);
   const validated = updateCircleSchema.parse(params.input);
   const db = getDb();
   const now = new Date();

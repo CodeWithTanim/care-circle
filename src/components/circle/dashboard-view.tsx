@@ -13,6 +13,7 @@ import {
   Menu,
   Pill,
   Plus,
+  Settings,
   Users,
   X,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import { AdherenceView } from "./adherence-view";
 import { AppointmentsView } from "./appointments-view";
 import { MedicationsView } from "./medications-view";
 import { MembersView } from "./members-view";
+import { SettingsView } from "./settings-view";
 import { TodayView } from "./today-view";
 
 export type { DashboardTab };
@@ -87,6 +89,12 @@ const NAV_ITEMS: Array<{
     label: "Adherence",
     icon: Activity,
     description: "History & routines",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    description: "Time zone & profile",
   },
 ];
 
@@ -565,6 +573,17 @@ export function DashboardView({
 
           {activeTab === "adherence" && (
             <AdherenceView circle={currentCircle} />
+          )}
+
+          {activeTab === "settings" && (
+            <SettingsView
+              circle={currentCircle}
+              currentMembership={currentMembership}
+              canManage={canManage}
+              onCircleUpdated={() => {
+                router.refresh();
+              }}
+            />
           )}
         </div>
       </main>

@@ -1,5 +1,10 @@
 export type DashboardTab =
-  "today" | "medications" | "appointments" | "members" | "adherence";
+  | "today"
+  | "medications"
+  | "appointments"
+  | "members"
+  | "adherence"
+  | "settings";
 
 export const VALID_TABS: readonly DashboardTab[] = [
   "today",
@@ -7,6 +12,7 @@ export const VALID_TABS: readonly DashboardTab[] = [
   "appointments",
   "members",
   "adherence",
+  "settings",
 ] as const;
 
 export function isValidTab(tab: unknown): tab is DashboardTab {

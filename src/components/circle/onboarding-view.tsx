@@ -22,15 +22,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const COMMON_TIMEZONES = [
+  "Asia/Dhaka",
+  "Asia/Calcutta",
+  "Asia/Karachi",
+  "Asia/Dubai",
+  "Asia/Singapore",
+  "Asia/Bangkok",
+  "Asia/Tokyo",
   "America/New_York",
   "America/Chicago",
   "America/Denver",
   "America/Los_Angeles",
+  "America/Phoenix",
   "America/Toronto",
   "Europe/London",
   "Europe/Paris",
-  "Asia/Kolkata",
-  "Asia/Tokyo",
+  "Europe/Berlin",
   "Australia/Sydney",
   "UTC",
 ];
@@ -350,6 +357,11 @@ export function OnboardingView({ userName }: { userName: string }) {
                   onChange={(e) => setTimezone(e.target.value)}
                   className="w-full min-h-[44px] rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
+                  {!COMMON_TIMEZONES.includes(timezone) && (
+                    <option value={timezone}>
+                      {timezone} (Detected Local Time)
+                    </option>
+                  )}
                   {COMMON_TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>
                       {tz}
