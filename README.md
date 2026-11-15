@@ -13,6 +13,8 @@ An elderly care and medication management platform that connects care recipients
 
 Built for **PromptWars × Catalyst** using **Google Antigravity**.
 
+<img src="docs/hackathon-logos.svg" alt="Hackathon acknowledgements: Hack2skill, MnM, Catalyst, and Google Developers" width="1040" />
+
 [Try the demo](https://care-circle-ochre.vercel.app/) · [Evaluator walkthrough](#evaluator-walkthrough) · [Features](#features) · [Run locally](#run-locally) · [Verification](#verification)
 
 </div>
