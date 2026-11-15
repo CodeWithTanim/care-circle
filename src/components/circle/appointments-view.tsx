@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, Clock, MapPin, Plus, User, XCircle } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Download,
+  ExternalLink,
+  MapPin,
+  Plus,
+  User,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +26,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  downloadIcsFile,
+  getGoogleCalendarUrl,
+  getGoogleMapsUrl,
+} from "@/lib/calendar";
 import type { Appointment, Circle } from "@/lib/models";
 import { getTodayLocalDate } from "@/lib/timezone";
 
@@ -240,6 +254,69 @@ export function AppointmentsView({
                         <p className="text-sm text-foreground/80 italic pt-2 border-t">
                           Notes: {appt.notes}
                         </p>
+                      )}
+
+                      {/* Google Services & Calendar Sync Strip */}
+                      {!isCancelled && (
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/60">
+                          <a
+                            href={getGoogleCalendarUrl(
+                              appt,
+                              circle.name,
+                              circle.recipientName,
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100/90 px-3 py-1.5 text-xs font-semibold text-[#0f4c47] transition-colors"
+                            title="Open event in Google Calendar"
+                          >
+                            <Calendar
+                              className="size-3.5 text-[#0f4c47]"
+                              aria-hidden="true"
+                            />
+                            <span>Add to Google Calendar</span>
+                            <ExternalLink
+                              className="size-3 opacity-70"
+                              aria-hidden="true"
+                            />
+                          </a>
+
+                          {appt.location && (
+                            <a
+                              href={getGoogleMapsUrl(appt.location)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-background hover:bg-muted px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors"
+                              title="Navigate via Google Maps"
+                            >
+                              <MapPin
+                                className="size-3.5 text-primary"
+                                aria-hidden="true"
+                              />
+                              <span>Directions (Maps)</span>
+                              <ExternalLink
+                                className="size-3 opacity-70"
+                                aria-hidden="true"
+                              />
+                            </a>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              downloadIcsFile(
+                                appt,
+                                circle.name,
+                                circle.recipientName,
+                              )
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-border/80 bg-background hover:bg-muted px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            title="Download .ics file for Outlook or Apple Calendar"
+                          >
+                            <Download className="size-3" aria-hidden="true" />
+                            <span>Export .ics</span>
+                          </button>
+                        </div>
                       )}
                     </div>
 

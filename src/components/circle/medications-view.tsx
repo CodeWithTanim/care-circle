@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Archive, Calendar, Clock, Edit, Pill, Plus, X } from "lucide-react";
+import {
+  Archive,
+  Calendar,
+  Clock,
+  Edit,
+  Pill,
+  Plus,
+  Printer,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +25,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Circle, Medication } from "@/lib/models";
+import { DoctorSummaryDialog } from "@/components/circle/doctor-summary-dialog";
+import type { Appointment, Circle, Medication } from "@/lib/models";
 import { getTodayLocalDate } from "@/lib/timezone";
 
 export function MedicationsView({
@@ -27,7 +37,9 @@ export function MedicationsView({
   canManage: boolean;
 }) {
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showArchived, setShowArchived] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
   // Add / Edit Modal state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,21 +56,30 @@ export function MedicationsView({
 
   useEffect(() => {
     let ignore = false;
-    async function fetchMedications() {
+    async function fetchMedicationsAndAppts() {
       try {
-        const res = await fetch(
-          `/api/circles/${circle._id}/medications?includeArchived=${showArchived}`,
-        );
-        if (res.ok && !ignore) {
-          const data = await res.json();
-          setMedications(data.medications || []);
+        const [medsRes, apptsRes] = await Promise.all([
+          fetch(
+            `/api/circles/${circle._id}/medications?includeArchived=${showArchived}`,
+          ),
+          fetch(`/api/circles/${circle._id}/appointments`),
+        ]);
+        if (!ignore) {
+          if (medsRes.ok) {
+            const data = await medsRes.json();
+            setMedications(data.medications || []);
+          }
+          if (apptsRes.ok) {
+            const apptsData = await apptsRes.json();
+            setAppointments(apptsData.appointments || []);
+          }
         }
       } catch {
         if (!ignore) toast.error("Failed to load medications");
       }
     }
 
-    fetchMedications();
+    fetchMedicationsAndAppts();
     return () => {
       ignore = true;
     };
@@ -192,7 +213,7 @@ export function MedicationsView({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
             <input
               type="checkbox"
@@ -202,6 +223,16 @@ export function MedicationsView({
             />
             Show archived
           </label>
+
+          <Button
+            variant="outline"
+            onClick={() => setIsSummaryOpen(true)}
+            className="min-h-[44px] gap-2 text-sm font-semibold border-teal-200 text-[#0f4c47] hover:bg-teal-50"
+            title="Open printable medical sheet for doctor visits"
+          >
+            <Printer className="size-4 text-[#0f4c47]" aria-hidden="true" />
+            <span>Print Doctor&apos;s Summary</span>
+          </Button>
 
           {canManage && (
             <Button
@@ -489,6 +520,15 @@ export function MedicationsView({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Doctor's Summary Printable Dialog */}
+      <DoctorSummaryDialog
+        circle={circle}
+        medications={medications}
+        appointments={appointments}
+        isOpen={isSummaryOpen}
+        onClose={() => setIsSummaryOpen(false)}
+      />
     </div>
   );
 }
