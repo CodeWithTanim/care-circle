@@ -2,13 +2,17 @@ import "server-only";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db";
 import type {
+  Appointment,
   Circle,
   CircleRole,
+  DoseOccurrence,
   Invite,
   Membership,
   MemberNotificationPreferences,
+  ReminderJob,
 } from "@/lib/models";
 import { AuthorizationError, requireCircleAccess } from "@/lib/permissions";
+import { localToUtc } from "@/lib/timezone";
 import {
   createCircleSchema,
   createInviteSchema,
@@ -93,10 +97,11 @@ export async function updateCircle(params: {
   circleId: string;
   input: unknown;
 }): Promise<Circle> {
-  await requireCircleAccess(params.userId, params.circleId, [
-    "owner",
-    "caregiver",
-  ]);
+  const { circle: existing } = await requireCircleAccess(
+    params.userId,
+    params.circleId,
+    ["owner", "caregiver"],
+  );
   const validated = updateCircleSchema.parse(params.input);
   const db = getDb();
   const now = new Date();
@@ -121,6 +126,72 @@ export async function updateCircle(params: {
   if (!result) {
     throw new AuthorizationError("Care circle not found", 404);
   }
+
+  // Reconcile timestamps for future occurrences and appointments when circle timezone changes
+  if (
+    validated.timezone !== undefined &&
+    validated.timezone !== existing.timezone
+  ) {
+    const futureDoses = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .find({
+        circleId: params.circleId,
+        status: "scheduled",
+        scheduledTimestamp: { $gt: now },
+      })
+      .toArray();
+
+    for (const dose of futureDoses) {
+      const newUtc = localToUtc(
+        dose.scheduledDate,
+        dose.scheduledTime,
+        validated.timezone,
+      );
+      await db
+        .collection<DoseOccurrence>("dose_occurrences")
+        .updateOne(
+          { _id: dose._id },
+          { $set: { scheduledTimestamp: newUtc, updatedAt: now } },
+        );
+      await db
+        .collection<ReminderJob>("reminder_jobs")
+        .updateMany(
+          { referenceId: dose._id, status: "pending" },
+          { $set: { scheduledFor: newUtc, updatedAt: now } },
+        );
+    }
+
+    const futureAppts = await db
+      .collection<Appointment>("appointments")
+      .find({
+        circleId: params.circleId,
+        status: "scheduled",
+        scheduledTimestamp: { $gt: now },
+      })
+      .toArray();
+
+    for (const appt of futureAppts) {
+      const newUtc = localToUtc(
+        appt.localDate,
+        appt.localTime,
+        validated.timezone,
+      );
+      const remindTime = new Date(newUtc.getTime() - 2 * 3600 * 1000);
+      await db
+        .collection<Appointment>("appointments")
+        .updateOne(
+          { _id: appt._id },
+          { $set: { scheduledTimestamp: newUtc, updatedAt: now } },
+        );
+      await db
+        .collection<ReminderJob>("reminder_jobs")
+        .updateMany(
+          { referenceId: appt._id, status: "pending" },
+          { $set: { scheduledFor: remindTime, updatedAt: now } },
+        );
+    }
+  }
+
   return result;
 }
 
@@ -261,24 +332,95 @@ export async function revokeInvite(params: {
   }
 }
 
+const MAX_JOIN_ATTEMPTS = 5;
+const JOIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+interface JoinRateLimitDoc {
+  _id: string; // key e.g. "user:123" or "ip:1.2.3.4"
+  attempts: number;
+  firstAttemptAt: Date;
+  expiresAt: Date;
+}
+
+async function checkJoinRateLimit(key: string): Promise<void> {
+  const db = getDb();
+  const now = new Date();
+  const record = await db
+    .collection<JoinRateLimitDoc>("join_rate_limits")
+    .findOne({ _id: key });
+
+  if (
+    record &&
+    record.expiresAt > now &&
+    record.attempts >= MAX_JOIN_ATTEMPTS
+  ) {
+    throw new AuthorizationError(
+      "Too many failed join attempts. Please try again in 15 minutes.",
+      429,
+    );
+  }
+}
+
+async function recordFailedJoinAttempt(key: string): Promise<void> {
+  const db = getDb();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + JOIN_LOCKOUT_MS);
+
+  await db.collection<JoinRateLimitDoc>("join_rate_limits").updateOne(
+    { _id: key },
+    {
+      $inc: { attempts: 1 },
+      $setOnInsert: { firstAttemptAt: now },
+      $set: { expiresAt },
+    },
+    { upsert: true },
+  );
+}
+
+async function clearJoinRateLimit(key: string): Promise<void> {
+  const db = getDb();
+  await db
+    .collection<JoinRateLimitDoc>("join_rate_limits")
+    .deleteOne({ _id: key });
+}
+
 export async function joinCircleWithPasscode(params: {
   userId: string;
   userEmail: string;
   userName: string;
   passcode: string;
+  clientIp?: string;
 }): Promise<{
   circle: Circle;
   membership: Membership;
   alreadyMember: boolean;
 }> {
-  const validated = joinCircleSchema.parse({ passcode: params.passcode });
-  const codeHash = hashPasscode(validated.passcode);
+  const userKey = `user:${params.userId}`;
+  const ipKey = params.clientIp ? `ip:${params.clientIp}` : null;
+
+  // 1. Check rate limits before any operations
+  await checkJoinRateLimit(userKey);
+  if (ipKey) {
+    await checkJoinRateLimit(ipKey);
+  }
+
+  // 2. Validate passcode format
+  const parsed = joinCircleSchema.safeParse({ passcode: params.passcode });
+  if (!parsed.success) {
+    await recordFailedJoinAttempt(userKey);
+    if (ipKey) await recordFailedJoinAttempt(ipKey);
+    throw new AuthorizationError("Invalid or expired invitation passcode", 400);
+  }
+
+  const codeHash = hashPasscode(parsed.data.passcode);
   const db = getDb();
 
-  // Rate limiting attempts: track failed attempts on IP/user if needed
+  // 3. Lookup invite
   const invite = await db.collection<Invite>("invites").findOne({ codeHash });
 
   if (!invite) {
+    await recordFailedJoinAttempt(userKey);
+    if (ipKey) await recordFailedJoinAttempt(ipKey);
     throw new AuthorizationError("Invalid or expired invitation passcode", 400);
   }
 
@@ -302,19 +444,18 @@ export async function joinCircleWithPasscode(params: {
     };
   }
 
-  if (invite.revoked) {
-    throw new AuthorizationError("This invitation has been revoked", 400);
-  }
-
-  if (new Date() > invite.expiresAt) {
-    throw new AuthorizationError("This invitation passcode has expired", 400);
-  }
-
-  if (invite.useCount >= invite.maxUses) {
-    throw new AuthorizationError(
-      "This invitation passcode has already reached its maximum uses",
-      400,
-    );
+  const now = new Date();
+  if (
+    invite.revoked ||
+    now > invite.expiresAt ||
+    invite.useCount >= invite.maxUses
+  ) {
+    await db
+      .collection<Invite>("invites")
+      .updateOne({ _id: invite._id }, { $inc: { failedAttempts: 1 } });
+    await recordFailedJoinAttempt(userKey);
+    if (ipKey) await recordFailedJoinAttempt(ipKey);
+    throw new AuthorizationError("Invalid or expired invitation passcode", 400);
   }
 
   // Atomically claim one use of the invite to prevent race conditions
@@ -323,18 +464,24 @@ export async function joinCircleWithPasscode(params: {
       _id: invite._id,
       useCount: { $lt: invite.maxUses },
       revoked: false,
-      expiresAt: { $gt: new Date() },
+      expiresAt: { $gt: now },
     },
     { $inc: { useCount: 1 } },
     { returnDocument: "after" },
   );
 
   if (!claimResult) {
-    throw new AuthorizationError(
-      "This invitation code has just expired or reached its maximum uses",
-      400,
-    );
+    await db
+      .collection<Invite>("invites")
+      .updateOne({ _id: invite._id }, { $inc: { failedAttempts: 1 } });
+    await recordFailedJoinAttempt(userKey);
+    if (ipKey) await recordFailedJoinAttempt(ipKey);
+    throw new AuthorizationError("Invalid or expired invitation passcode", 400);
   }
+
+  // Successful join: clear failed attempt tracker for this user/IP
+  await clearJoinRateLimit(userKey);
+  if (ipKey) await clearJoinRateLimit(ipKey);
 
   const membership: Membership = {
     _id: randomUUID(),

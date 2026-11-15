@@ -1,9 +1,29 @@
 import { z } from "zod";
 
-// Valid IANA timezone regex or safe check
-const timeZoneRegex = /^[A-Za-z0-9_+-]+(?:\/[A-Za-z0-9_+-]+)*$/;
+// Valid IANA timezone check using runtime Intl
+export function isValidIanaTimeZone(tz: string): boolean {
+  if (typeof tz !== "string" || !tz.trim()) return false;
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz.trim() });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const timeFormatRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
 const dateFormatRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+export function isValidCalendarDate(dateStr: string): boolean {
+  if (!dateFormatRegex.test(dateStr)) return false;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  return (
+    d.getUTCFullYear() === year &&
+    d.getUTCMonth() === month - 1 &&
+    d.getUTCDate() === day
+  );
+}
 
 export const createCircleSchema = z.object({
   name: z
@@ -26,7 +46,7 @@ export const createCircleSchema = z.object({
   isRecipientUser: z.boolean().default(false),
   timezone: z
     .string()
-    .regex(timeZoneRegex, "Invalid IANA timezone")
+    .refine(isValidIanaTimeZone, "Invalid or unsupported IANA timezone")
     .default("UTC"),
   sharingConsent: z.boolean().refine((val) => val === true, {
     message:
@@ -37,7 +57,10 @@ export const createCircleSchema = z.object({
 
 export const updateCircleSchema = z.object({
   name: z.string().trim().min(2).max(60).optional(),
-  timezone: z.string().regex(timeZoneRegex).optional(),
+  timezone: z
+    .string()
+    .refine(isValidIanaTimeZone, "Invalid or unsupported IANA timezone")
+    .optional(),
   sharingConsent: z.boolean().optional(),
   consentNotes: z.string().trim().max(300).optional(),
 });
@@ -63,27 +86,48 @@ export const joinCircleSchema = z.object({
     .transform((val) => val.toUpperCase().replace(/[^A-Z0-9]/g, "")),
 });
 
-export const createMedicationSchema = z.object({
-  name: z.string().trim().min(2, "Medication name is required").max(100),
-  dosage: z.string().trim().min(1, "Dosage is required (e.g. 10mg)").max(60),
-  instructions: z.string().trim().max(300).optional(),
-  scheduleTimes: z
-    .array(
-      z.string().regex(timeFormatRegex, "Time must be HH:MM format (24-hour)"),
-    )
-    .min(1, "At least one daily schedule time is required")
-    .max(6, "Maximum 6 times per day"),
-  startDate: z.string().regex(dateFormatRegex, "Start date must be YYYY-MM-DD"),
-  endDate: z
-    .string()
-    .regex(dateFormatRegex, "End date must be YYYY-MM-DD")
-    .nullable()
-    .optional(),
-});
+export const createMedicationSchema = z
+  .object({
+    name: z.string().trim().min(2, "Medication name is required").max(100),
+    dosage: z.string().trim().min(1, "Dosage is required (e.g. 10mg)").max(60),
+    instructions: z.string().trim().max(300).optional(),
+    scheduleTimes: z
+      .array(
+        z
+          .string()
+          .regex(timeFormatRegex, "Time must be HH:MM format (24-hour)"),
+      )
+      .min(1, "At least one daily schedule time is required")
+      .max(6, "Maximum 6 times per day")
+      .refine(
+        (times) => new Set(times).size === times.length,
+        "Duplicate schedule times are not allowed",
+      ),
+    startDate: z
+      .string()
+      .refine(
+        isValidCalendarDate,
+        "Start date must be a valid calendar date (YYYY-MM-DD)",
+      ),
+    endDate: z
+      .string()
+      .refine(
+        isValidCalendarDate,
+        "End date must be a valid calendar date (YYYY-MM-DD)",
+      )
+      .nullable()
+      .optional(),
+  })
+  .refine((data) => !data.endDate || data.endDate >= data.startDate, {
+    message: "End date must be greater than or equal to start date",
+    path: ["endDate"],
+  });
 
-export const updateMedicationSchema = createMedicationSchema.extend({
-  active: z.boolean().default(true),
-});
+export const updateMedicationSchema = createMedicationSchema.and(
+  z.object({
+    active: z.boolean().default(true),
+  }),
+);
 
 export const recordDoseSchema = z.discriminatedUnion("action", [
   z.object({
@@ -107,7 +151,12 @@ export const createAppointmentSchema = z.object({
     .trim()
     .min(2, "Location or address is required")
     .max(200),
-  localDate: z.string().regex(dateFormatRegex, "Date must be YYYY-MM-DD"),
+  localDate: z
+    .string()
+    .refine(
+      isValidCalendarDate,
+      "Date must be a valid calendar date (YYYY-MM-DD)",
+    ),
   localTime: z
     .string()
     .regex(timeFormatRegex, "Time must be HH:MM format (24-hour)"),

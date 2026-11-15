@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, HeartHandshake, Menu, X } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -13,6 +13,18 @@ interface HomeNavbarProps {
 export function HomeNavbar({ initialLoggedIn }: HomeNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
+
+  // Close mobile menu on Escape key press
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
 
   // Prefer live client session; fall back to SSR initial value while pending
   const isLoggedIn = isPending ? (initialLoggedIn ?? false) : !!session;
@@ -111,7 +123,7 @@ export function HomeNavbar({ initialLoggedIn }: HomeNavbarProps) {
             <Button
               asChild
               size="sm"
-              className="rounded-full bg-[#0f4c47] text-white text-xs font-semibold"
+              className="min-h-[44px] rounded-full bg-[#0f4c47] text-white text-xs font-semibold px-4"
             >
               <Link href="/dashboard">Dashboard</Link>
             </Button>
@@ -120,7 +132,7 @@ export function HomeNavbar({ initialLoggedIn }: HomeNavbarProps) {
               asChild
               size="sm"
               variant="outline"
-              className="rounded-full text-xs font-semibold"
+              className="min-h-[44px] rounded-full text-xs font-semibold px-4"
             >
               <Link href="/sign-in">Sign in</Link>
             </Button>
@@ -131,7 +143,9 @@ export function HomeNavbar({ initialLoggedIn }: HomeNavbarProps) {
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle Navigation Menu"
-            className="size-10"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            className="min-h-[44px] min-w-[44px] size-11"
           >
             {mobileMenuOpen ? (
               <X className="size-6" />
@@ -144,7 +158,12 @@ export function HomeNavbar({ initialLoggedIn }: HomeNavbarProps) {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="border-t border-border/60 bg-background px-4 py-4 sm:hidden space-y-3">
+        <div
+          id="mobile-navigation"
+          role="region"
+          aria-label="Mobile Navigation"
+          className="border-t border-border/60 bg-background px-4 py-4 sm:hidden space-y-3"
+        >
           <nav className="flex flex-col space-y-3 text-base font-medium">
             <Link
               href="#about"
@@ -186,14 +205,14 @@ export function HomeNavbar({ initialLoggedIn }: HomeNavbarProps) {
           </nav>
           {!isLoggedIn && (
             <div className="pt-2 border-t flex flex-col gap-2">
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="outline" className="w-full min-h-[44px]">
                 <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>
                   Sign In
                 </Link>
               </Button>
               <Button
                 asChild
-                className="w-full bg-[#0f4c47] text-white hover:bg-[#0c3d39]"
+                className="w-full min-h-[44px] bg-[#0f4c47] text-white hover:bg-[#0c3d39]"
               >
                 <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>
                   Get Started

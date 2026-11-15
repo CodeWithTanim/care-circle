@@ -537,39 +537,42 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ─── Numbers / Impact Banner ───────────────────────────────────── */}
+        {/* ─── Architectural Pillars Banner ──────────────────────────────── */}
         <section className="bg-[#0f4c47] py-16 text-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 sm:grid-cols-3 text-center divide-y sm:divide-y-0 sm:divide-x divide-teal-800">
               <div className="pt-4 sm:pt-0">
-                <p className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-                  120k+
+                <p className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  Recipient Control
                 </p>
-                <p className="mt-2 text-sm font-medium uppercase tracking-wider text-teal-200">
-                  Doses Monitored Safely
-                </p>
-              </div>
-              <div className="pt-6 sm:pt-0">
-                <p className="text-4xl sm:text-5xl font-black tracking-tight text-teal-300">
-                  94%
-                </p>
-                <p className="mt-2 text-sm font-medium uppercase tracking-wider text-teal-200">
-                  Adherence Improvement
+                <p className="mt-2 text-sm font-medium text-teal-200">
+                  Care recipient owns their circle, health records, and
+                  caregiver permissions.
                 </p>
               </div>
               <div className="pt-6 sm:pt-0">
-                <p className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-                  25k+
+                <p className="text-xl sm:text-2xl font-bold tracking-tight text-teal-300">
+                  Role-Based Privacy
                 </p>
-                <p className="mt-2 text-sm font-medium uppercase tracking-wider text-teal-200">
-                  Peace-of-Mind Check-Ins
+                <p className="mt-2 text-sm font-medium text-teal-200">
+                  Granular permissions for caregivers, family observers, and
+                  clinical aides.
+                </p>
+              </div>
+              <div className="pt-6 sm:pt-0">
+                <p className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  Proactive Reminders
+                </p>
+                <p className="mt-2 text-sm font-medium text-teal-200">
+                  Independent cron scheduler dispatches alerts without requiring
+                  page visits.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ─── Testimonials Section ──────────────────────────────────────── */}
+        {/* ─── Illustrative Family Scenarios ──────────────────────────────── */}
         <section id="testimonials" className="py-20 lg:py-28 bg-teal-50/40">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
@@ -577,112 +580,95 @@ export default async function Home() {
                 variant="outline"
                 className="text-xs font-bold uppercase tracking-wider text-[#0f4c47] border-[#0f4c47]/30"
               >
-                Real Testimonials
+                Illustrative Scenarios
               </Badge>
               <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-                What Families Say About Their Care Experience
+                How Circles Coordinate in Practice
               </h2>
               <p className="text-base text-muted-foreground">
-                Hear how Care Circle brings dignity to seniors and genuine
-                relief to their families.
+                Fictional walkthroughs demonstrating how care recipients,
+                caregivers, and family observers collaborate with dignity.
               </p>
             </div>
 
             <div className="grid gap-8 md:grid-cols-3">
-              {/* Review 1 */}
+              {/* Scenario 1 */}
               <Card className="border bg-white shadow-sm p-3">
                 <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="size-4 fill-current"
-                        aria-hidden="true"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-base text-muted-foreground leading-relaxed italic">
-                    &ldquo;My 82-year-old mother loves the large buttons on her
-                    tablet. When she takes her blood pressure medicine, I
-                    immediately see it on my phone at work. Zero stress.&rdquo;
+                  <Badge variant="secondary" className="text-xs">
+                    Observer Scenario
+                  </Badge>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    A family member living in another city checks the Today
+                    dashboard to see that morning blood pressure medication was
+                    confirmed, providing peace of mind without repetitive phone
+                    calls.
                   </p>
                   <div className="pt-2 border-t flex items-center gap-3">
                     <div className="size-10 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-sm">
-                      SV
+                      FO
                     </div>
                     <div>
                       <p className="font-bold text-sm text-foreground">
-                        Sarah Vance
+                        Family Observer
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Daughter &amp; Family Observer
+                        Read-Only Peace of Mind
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Review 2 */}
+              {/* Scenario 2 */}
               <Card className="border bg-white shadow-sm p-3">
                 <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="size-4 fill-current"
-                        aria-hidden="true"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-base text-muted-foreground leading-relaxed italic">
-                    &ldquo;The &lsquo;I&apos;ll handle this&rsquo; button is
-                    pure genius. When Dad missed his afternoon pill, my brother
-                    clicked it so I didn&apos;t end up calling Dad twice while
-                    he was resting.&rdquo;
+                  <Badge variant="secondary" className="text-xs">
+                    Caregiver Scenario
+                  </Badge>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    When an afternoon dose is past grace period, a missed-dose
+                    alert appears. The primary caregiver clicks &ldquo;I&apos;ll
+                    handle this&rdquo; so other family members know it is being
+                    managed.
                   </p>
                   <div className="pt-2 border-t flex items-center gap-3">
                     <div className="size-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">
-                      MR
+                      CG
                     </div>
                     <div>
                       <p className="font-bold text-sm text-foreground">
-                        Marcus Reed
+                        Primary Caregiver
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Primary Caregiver
+                        Active Care Coordination
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Review 3 */}
+              {/* Scenario 3 */}
               <Card className="border bg-white shadow-sm p-3">
                 <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="size-4 fill-current"
-                        aria-hidden="true"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-base text-muted-foreground leading-relaxed italic">
-                    &ldquo;As a visiting nurse, managing 6 patients across
-                    different families was overwhelming. Care Circle gives me
-                    exact schedules, doctor notes, and accountability.&rdquo;
+                  <Badge variant="secondary" className="text-xs">
+                    Clinical Visit Scenario
+                  </Badge>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    Before visiting a geriatrician, the family prints the Doctor
+                    Visit Summary with active prescriptions, dosage schedules,
+                    adherence rates, and recent vitals readings.
                   </p>
                   <div className="pt-2 border-t flex items-center gap-3">
                     <div className="size-10 rounded-full bg-[#0f4c47] text-white flex items-center justify-center font-bold text-sm">
-                      NL
+                      MD
                     </div>
                     <div>
                       <p className="font-bold text-sm text-foreground">
-                        Nurse Lisa Chang, RN
+                        Healthcare Partner
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Home Healthcare Specialist
+                        Doctor Visit Preparation
                       </p>
                     </div>
                   </div>

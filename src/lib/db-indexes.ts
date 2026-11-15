@@ -85,4 +85,20 @@ export async function ensureDatabaseIndexes(db: Db): Promise<void> {
   await db
     .collection("reminder_jobs")
     .createIndex({ circleId: 1 }, { name: "idx_circle_reminders" });
+
+  // Rate limiting for circle join attempts: TTL index expires old limit documents automatically
+  await db
+    .collection("join_rate_limits")
+    .createIndex(
+      { expiresAt: 1 },
+      { expireAfterSeconds: 0, name: "idx_join_limits_ttl" },
+    );
+
+  // General rate limits (AI endpoints, join attempts):
+  await db
+    .collection("rate_limits")
+    .createIndex(
+      { expiresAt: 1 },
+      { expireAfterSeconds: 0, name: "idx_rate_limits_ttl" },
+    );
 }

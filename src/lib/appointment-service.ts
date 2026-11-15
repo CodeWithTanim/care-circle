@@ -1,7 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { getDb } from "@/lib/db";
-import type { Appointment } from "@/lib/models";
+import type { Appointment, ReminderJob } from "@/lib/models";
 import { AuthorizationError, requireCircleAccess } from "@/lib/permissions";
 import { localToUtc } from "@/lib/timezone";
 import {
@@ -39,6 +39,7 @@ export async function createAppointment(params: {
     localTime: validated.localTime,
     notes: validated.notes,
     status: "scheduled",
+    revision: 1,
     createdAt: now,
     updatedAt: now,
     createdBy: params.userId,
@@ -62,11 +63,20 @@ export async function updateAppointment(params: {
   const db = getDb();
   const now = new Date();
 
+  const existing = await db
+    .collection<Appointment>("appointments")
+    .findOne({ _id: params.appointmentId, circleId: params.circleId });
+  if (!existing) {
+    throw new AuthorizationError("Appointment not found", 404);
+  }
+
   const scheduledTimestamp = localToUtc(
     validated.localDate,
     validated.localTime,
     circle.timezone,
   );
+
+  const nextRevision = (existing.revision ?? 1) + 1;
 
   const updateFields: Partial<Appointment> = {
     title: validated.title,
@@ -77,6 +87,7 @@ export async function updateAppointment(params: {
     localTime: validated.localTime,
     notes: validated.notes,
     status: validated.status,
+    revision: nextRevision,
     updatedAt: now,
   };
 
@@ -91,6 +102,39 @@ export async function updateAppointment(params: {
   if (!result) {
     throw new AuthorizationError("Appointment not found", 404);
   }
+
+  // Reconcile reminder jobs: cancel pending and processing jobs for previous schedule
+  if (result.status === "cancelled" || result.status === "completed") {
+    await db.collection<ReminderJob>("reminder_jobs").updateMany(
+      {
+        referenceId: params.appointmentId,
+        status: { $in: ["pending", "processing"] },
+      },
+      {
+        $set: {
+          status: "cancelled",
+          lastError: `Appointment marked as ${result.status}`,
+          updatedAt: now,
+        },
+      },
+    );
+  } else {
+    // If appointment time/date changed, cancel obsolete reminders so fresh revision is scheduled
+    await db.collection<ReminderJob>("reminder_jobs").updateMany(
+      {
+        referenceId: params.appointmentId,
+        status: { $in: ["pending", "processing"] },
+      },
+      {
+        $set: {
+          status: "cancelled",
+          lastError: `Appointment schedule updated to revision ${nextRevision}`,
+          updatedAt: now,
+        },
+      },
+    );
+  }
+
   return result;
 }
 
@@ -117,6 +161,19 @@ export async function cancelAppointment(params: {
   if (!result) {
     throw new AuthorizationError("Appointment not found", 404);
   }
+
+  // Cancel any pending reminder jobs for this appointment
+  await db.collection<ReminderJob>("reminder_jobs").updateMany(
+    { referenceId: params.appointmentId, status: "pending" },
+    {
+      $set: {
+        status: "cancelled",
+        lastError: "Appointment was cancelled",
+        updatedAt: now,
+      },
+    },
+  );
+
   return result;
 }
 

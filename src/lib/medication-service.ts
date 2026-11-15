@@ -6,6 +6,7 @@ import type {
   Circle,
   DoseOccurrence,
   Medication,
+  ReminderJob,
 } from "@/lib/models";
 import {
   AuthorizationError,
@@ -17,6 +18,7 @@ import {
   getTodayLocalDate,
   isDoseOverdue,
   localToUtc,
+  utcToLocalDate,
 } from "@/lib/timezone";
 import {
   createMedicationSchema,
@@ -175,13 +177,94 @@ export async function updateMedication(params: {
     throw new AuthorizationError("Medication not found", 404);
   }
 
-  // If archived, cancel any future pending doses
+  // Reconcile future unconfirmed scheduled occurrences and obsolete jobs
   if (validated.active === false) {
-    await db.collection<DoseOccurrence>("dose_occurrences").deleteMany({
-      medicationId: params.medicationId,
-      status: "scheduled",
-      scheduledTimestamp: { $gt: now },
-    });
+    const futureDoses = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .find({
+        medicationId: params.medicationId,
+        status: { $in: ["scheduled", "snoozed"] },
+        scheduledTimestamp: { $gt: now },
+      })
+      .toArray();
+
+    const futureIds = futureDoses.map((d) => d._id);
+    if (futureIds.length > 0) {
+      await db.collection<DoseOccurrence>("dose_occurrences").deleteMany({
+        _id: { $in: futureIds },
+      });
+      await db.collection<ReminderJob>("reminder_jobs").updateMany(
+        { referenceId: { $in: futureIds }, status: "pending" },
+        {
+          $set: {
+            status: "cancelled",
+            lastError: "Medication was archived",
+            updatedAt: now,
+          },
+        },
+      );
+    }
+  } else {
+    // Schedule times, dosage, or dates may have changed
+    const futureDoses = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .find({
+        medicationId: params.medicationId,
+        status: { $in: ["scheduled", "snoozed"] },
+        scheduledTimestamp: { $gt: now },
+      })
+      .toArray();
+
+    const allowedTimes = new Set(validated.scheduleTimes);
+    const toDeleteIds: string[] = [];
+
+    for (const dose of futureDoses) {
+      const isPastEndDate =
+        validated.endDate && dose.scheduledDate > validated.endDate;
+      const isBeforeStartDate = dose.scheduledDate < validated.startDate;
+      const isRemovedTime = !allowedTimes.has(dose.scheduledTime);
+
+      if (isPastEndDate || isBeforeStartDate || isRemovedTime) {
+        toDeleteIds.push(dose._id);
+      } else {
+        await db.collection<DoseOccurrence>("dose_occurrences").updateOne(
+          { _id: dose._id },
+          {
+            $set: {
+              medicationName: validated.name,
+              dosage: validated.dosage,
+              instructions: validated.instructions,
+              updatedAt: now,
+            },
+          },
+        );
+      }
+    }
+
+    if (toDeleteIds.length > 0) {
+      await db.collection<DoseOccurrence>("dose_occurrences").deleteMany({
+        _id: { $in: toDeleteIds },
+      });
+      await db.collection<ReminderJob>("reminder_jobs").updateMany(
+        { referenceId: { $in: toDeleteIds }, status: "pending" },
+        {
+          $set: {
+            status: "cancelled",
+            lastError: "Schedule changed or occurrence removed",
+            updatedAt: now,
+          },
+        },
+      );
+    }
+
+    // Pre-generate today's occurrences if active today
+    const circle = await db
+      .collection<Circle>("circles")
+      .findOne({ _id: params.circleId });
+    if (circle) {
+      const today = getTodayLocalDate(circle.timezone);
+      await ensureDoseOccurrencesForDate(params.circleId, today);
+    }
   }
 
   return result;
@@ -210,12 +293,32 @@ export async function archiveMedication(params: {
     throw new AuthorizationError("Medication not found", 404);
   }
 
-  // Remove future unconfirmed scheduled occurrences
-  await db.collection<DoseOccurrence>("dose_occurrences").deleteMany({
-    medicationId: params.medicationId,
-    status: "scheduled",
-    scheduledTimestamp: { $gt: now },
-  });
+  // Remove future unconfirmed scheduled occurrences and cancel pending reminder jobs
+  const futureDoses = await db
+    .collection<DoseOccurrence>("dose_occurrences")
+    .find({
+      medicationId: params.medicationId,
+      status: { $in: ["scheduled", "snoozed"] },
+      scheduledTimestamp: { $gt: now },
+    })
+    .toArray();
+
+  const futureIds = futureDoses.map((d) => d._id);
+  if (futureIds.length > 0) {
+    await db.collection<DoseOccurrence>("dose_occurrences").deleteMany({
+      _id: { $in: futureIds },
+    });
+    await db.collection<ReminderJob>("reminder_jobs").updateMany(
+      { referenceId: { $in: futureIds }, status: "pending" },
+      {
+        $set: {
+          status: "cancelled",
+          lastError: "Medication was archived",
+          updatedAt: now,
+        },
+      },
+    );
+  }
 }
 
 export async function getMedications(params: {
@@ -239,50 +342,78 @@ export async function getMedications(params: {
 }
 
 /**
- * Get Today's doses for a circle, automatically updating overdue doses.
+ * Proactively generates dose occurrences for active medications across a rolling window
+ * (2 days catchup, today, and tomorrow) and advances overdue unconfirmed doses to 'unconfirmed_missed'.
+ * Operates completely independently of page visits or user browser sessions.
  */
-export async function getTodayDoses(params: {
-  userId: string;
-  circleId: string;
-  targetDate?: string; // Optional override e.g. for testing or viewing specific day
-}): Promise<{
-  dateStr: string;
-  timezone: string;
-  doses: DoseOccurrence[];
-}> {
-  const { circle } = await requireCircleAccess(params.userId, params.circleId);
+export async function syncCircleDosesAndOverdue(
+  circleId: string,
+  now: Date = new Date(),
+): Promise<void> {
   const db = getDb();
-  const timezone = circle.timezone;
-  const dateStr = params.targetDate ?? getTodayLocalDate(timezone);
+  const circle = await db
+    .collection<Circle>("circles")
+    .findOne({ _id: circleId });
+  if (!circle) return;
 
-  await ensureDoseOccurrencesForDate(params.circleId, dateStr);
+  const tz = circle.timezone || "UTC";
 
-  const doses = await db
+  // Rolling window: 2 days catch-up + today + 1 day lookahead
+  const dateStrings: string[] = [];
+  for (let offsetDays = -2; offsetDays <= 1; offsetDays++) {
+    const targetMs = now.getTime() + offsetDays * 24 * 3600 * 1000;
+    const { localDate } = utcToLocalDate(new Date(targetMs), tz);
+    if (!dateStrings.includes(localDate)) {
+      dateStrings.push(localDate);
+    }
+  }
+
+  for (const dateStr of dateStrings) {
+    await ensureDoseOccurrencesForDate(circleId, dateStr);
+  }
+
+  // Find all unconfirmed scheduled/snoozed doses whose scheduled time has passed
+  const unconfirmedDoses = await db
     .collection<DoseOccurrence>("dose_occurrences")
-    .find({ circleId: params.circleId, scheduledDate: dateStr })
-    .sort({ scheduledTime: 1, medicationName: 1 })
+    .find({
+      circleId,
+      status: { $in: ["scheduled", "snoozed"] },
+      scheduledTimestamp: { $lte: now },
+    })
     .toArray();
 
-  const now = new Date();
-  // Check and update overdue doses to 'unconfirmed_missed'
-  for (const dose of doses) {
-    if (dose.status === "scheduled" || dose.status === "snoozed") {
-      if (
-        isDoseOverdue(
-          dose.scheduledTimestamp,
-          dose.snoozeUntil,
-          DEFAULT_GRACE_PERIOD_MINUTES,
-          now,
-        )
-      ) {
-        dose.status = "unconfirmed_missed";
-        dose.updatedAt = now;
-        await db
-          .collection<DoseOccurrence>("dose_occurrences")
-          .updateOne(
-            { _id: dose._id, status: { $in: ["scheduled", "snoozed"] } },
-            { $set: { status: "unconfirmed_missed", updatedAt: now } },
-          );
+  for (const dose of unconfirmedDoses) {
+    if (
+      isDoseOverdue(
+        dose.scheduledTimestamp,
+        dose.snoozeUntil,
+        DEFAULT_GRACE_PERIOD_MINUTES,
+        now,
+      )
+    ) {
+      const updateRes = await db
+        .collection<DoseOccurrence>("dose_occurrences")
+        .updateOne(
+          { _id: dose._id, status: { $in: ["scheduled", "snoozed"] } },
+          { $set: { status: "unconfirmed_missed", updatedAt: now } },
+        );
+
+      if (updateRes.modifiedCount > 0) {
+        // Cancel obsolete upcoming_dose reminder jobs
+        await db.collection<ReminderJob>("reminder_jobs").updateMany(
+          {
+            referenceId: dose._id,
+            jobType: "upcoming_dose",
+            status: "pending",
+          },
+          {
+            $set: {
+              status: "cancelled",
+              lastError: "Dose is overdue and unconfirmed missed",
+              updatedAt: now,
+            },
+          },
+        );
 
         // Auto-create missed dose alert if one doesn't exist
         const existingAlert = await db
@@ -293,7 +424,7 @@ export async function getTodayDoses(params: {
         if (!existingAlert) {
           await db.collection<CareAlert>("care_alerts").insertOne({
             _id: randomUUID(),
-            circleId: params.circleId,
+            circleId,
             type: "missed_dose",
             referenceId: dose._id,
             title: `Missed dose: ${dose.medicationName}`,
@@ -311,6 +442,36 @@ export async function getTodayDoses(params: {
       }
     }
   }
+}
+
+/**
+ * Get Today's doses for a circle, automatically updating overdue doses.
+ */
+export async function getTodayDoses(params: {
+  userId: string;
+  circleId: string;
+  targetDate?: string; // Optional override e.g. for testing or viewing specific day
+}): Promise<{
+  dateStr: string;
+  timezone: string;
+  doses: DoseOccurrence[];
+}> {
+  const { circle } = await requireCircleAccess(params.userId, params.circleId);
+  const db = getDb();
+  const timezone = circle.timezone;
+  const now = new Date();
+  const dateStr = params.targetDate ?? getTodayLocalDate(timezone, now);
+
+  await syncCircleDosesAndOverdue(params.circleId, now);
+  if (params.targetDate) {
+    await ensureDoseOccurrencesForDate(params.circleId, params.targetDate);
+  }
+
+  const doses = await db
+    .collection<DoseOccurrence>("dose_occurrences")
+    .find({ circleId: params.circleId, scheduledDate: dateStr })
+    .sort({ scheduledTime: 1, medicationName: 1 })
+    .toArray();
 
   return { dateStr, timezone, doses };
 }

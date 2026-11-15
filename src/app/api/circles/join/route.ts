@@ -9,6 +9,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const clientIp =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "127.0.0.1";
+
   try {
     const body = await request.json();
     const result = await joinCircleWithPasscode({
@@ -16,6 +21,7 @@ export async function POST(request: Request) {
       userEmail: session.user.email,
       userName: session.user.name,
       passcode: body.passcode ?? "",
+      clientIp,
     });
     return NextResponse.json(result);
   } catch (err: unknown) {

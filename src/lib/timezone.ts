@@ -11,9 +11,7 @@ export function localToUtc(
 ): Date {
   const [year, month, day] = dateStr.split("-").map(Number);
   const [hour, minute] = timeStr.split(":").map(Number);
-
-  // Initial estimate assuming UTC
-  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  const targetUtcEpoch = Date.UTC(year, month - 1, day, hour, minute);
 
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone,
@@ -26,25 +24,53 @@ export function localToUtc(
     hour12: false,
   });
 
-  const parts = formatter.formatToParts(utcGuess);
-  const map: Record<string, string> = {};
-  for (const p of parts) {
-    map[p.type] = p.value;
+  function getOffset(d: Date): number {
+    const parts = formatter.formatToParts(d);
+    const m: Record<string, string> = {};
+    for (const p of parts) m[p.type] = p.value;
+    let h = parseInt(m.hour, 10);
+    if (h === 24) h = 0;
+    const localAsUtc = Date.UTC(
+      parseInt(m.year, 10),
+      parseInt(m.month, 10) - 1,
+      parseInt(m.day, 10),
+      h,
+      parseInt(m.minute, 10),
+    );
+    return localAsUtc - d.getTime();
   }
 
-  let h = parseInt(map.hour, 10);
-  if (h === 24) h = 0;
+  let candidate = new Date(targetUtcEpoch);
+  for (let i = 0; i < 4; i++) {
+    const offset = getOffset(candidate);
+    const nextCandidate = new Date(targetUtcEpoch - offset);
+    if (nextCandidate.getTime() === candidate.getTime()) break;
+    candidate = nextCandidate;
+  }
 
-  const localGuessAsUtc = Date.UTC(
-    parseInt(map.year, 10),
-    parseInt(map.month, 10) - 1,
-    parseInt(map.day, 10),
-    h,
-    parseInt(map.minute, 10),
-  );
+  // Verify candidate round-trips to target local time
+  const checkParts = formatter.formatToParts(candidate);
+  const cm: Record<string, string> = {};
+  for (const p of checkParts) cm[p.type] = p.value;
+  let ch = parseInt(cm.hour, 10);
+  if (ch === 24) ch = 0;
+  const cmin = parseInt(cm.minute, 10);
 
-  const offsetMs = localGuessAsUtc - utcGuess.getTime();
-  return new Date(utcGuess.getTime() - offsetMs);
+  // If there is a discrepancy due to a spring-forward transition gap (e.g. 02:30 skipped to 03:00):
+  // Shift forward by 1 hour (the gap) and recompute (standard compatible disambiguation).
+  if (ch !== hour || cmin !== minute) {
+    const gapShiftEpoch = targetUtcEpoch + 3600 * 1000;
+    let gapCandidate = new Date(gapShiftEpoch);
+    for (let i = 0; i < 4; i++) {
+      const offset = getOffset(gapCandidate);
+      const next = new Date(gapShiftEpoch - offset);
+      if (next.getTime() === gapCandidate.getTime()) break;
+      gapCandidate = next;
+    }
+    return gapCandidate;
+  }
+
+  return candidate;
 }
 
 /**

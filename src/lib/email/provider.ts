@@ -60,6 +60,17 @@ class MemoryTestEmailTransport implements EmailProvider {
   }
 }
 
+class UnconfiguredProductionEmailProvider implements EmailProvider {
+  name = "UnconfiguredProductionEmailProvider";
+  isTestTransport = false;
+
+  async sendEmail(): Promise<EmailDeliveryResult> {
+    throw new Error(
+      "Email delivery unconfigured: RESEND_API_KEY is missing in production environment. Reminder job marked as failed.",
+    );
+  }
+}
+
 class ResendEmailProvider implements EmailProvider {
   name = "Resend";
   isTestTransport = false;
@@ -88,6 +99,7 @@ class ResendEmailProvider implements EmailProvider {
         text: params.text,
         html: params.html,
       }),
+      signal: AbortSignal.timeout(10000), // 10s request timeout
     });
 
     if (!res.ok) {
@@ -115,7 +127,7 @@ export function getEmailProvider(): EmailProvider {
   if (activeProvider) return activeProvider;
 
   const resendApiKey = process.env.RESEND_API_KEY;
-  if (resendApiKey) {
+  if (resendApiKey && resendApiKey.trim().length > 0) {
     activeProvider = new ResendEmailProvider(
       resendApiKey,
       process.env.EMAIL_FROM,
@@ -123,7 +135,13 @@ export function getEmailProvider(): EmailProvider {
     return activeProvider;
   }
 
-  // Default to safe test transport
+  // In production, reject unconfigured email rather than silently capturing to memory
+  if (process.env.NODE_ENV === "production") {
+    activeProvider = new UnconfiguredProductionEmailProvider();
+    return activeProvider;
+  }
+
+  // Default to safe test transport in development and testing
   activeProvider = testEmailTransport;
   return activeProvider;
 }

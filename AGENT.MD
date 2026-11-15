@@ -19,21 +19,17 @@ The challenge and judging criteria are in `assets/`. Preserve those source files
 
 ## Current foundation
 
-Implemented: landing page, email/password sign-up and sign-in, sign-out, server-validated dashboard access, pooled MongoDB connection, database-backed auth rate limiting, shadcn components, health endpoint, and a standalone Docker build.
+Implemented: landing page, Better Auth authentication with secure email/password sessions, pooled MongoDB persistence, database-backed auth and join attempt rate limiting, shadcn UI components, health endpoint, standalone Docker configuration, complete care circle lifecycle with expiring role-based invitations, medication management with adherence history, appointment scheduling, daily vitals tracker with role-restricted writes, care alert triage ("I'll handle this"), proactive independent cron reminder generation and lease-recovering worker delivery, fail-closed scheduler authentication, daylight saving time transition handling, and Google Gemini AI care coordination assistant with fallback guidance.
 
-The dashboard is an empty starting point. Care circles, invite passcodes, medicine CRUD, adherence records, appointments, email delivery, and reminder scheduling are not implemented yet. Do not represent planned features as working features.
+## Core capabilities
 
-## Planned product
-
-The implementation handoff for Google Antigravity is in `antigravity/README.md`. Read its brief, task checklist, acceptance checks, and progress log before starting feature work.
-
-- Create or join a care circle through secure, expiring invitations/passcodes.
-- Give each person an individual account. A circle passcode is an invitation, never a replacement for authentication.
-- Authorize elder, caregiver, and family access per circle and action, respecting the elder's choices.
-- Build a simple Today view with medication confirmations and upcoming appointments.
-- Support medication schedules, adherence history, and appointments.
-- Send email reminders for upcoming doses, missed doses, and appointments.
-- Let a caregiver acknowledge an alert with "I'll handle this" so the family can see who is following up.
+- Create or join a care circle through secure, expiring invitations with rate-limited attempts.
+- Give each person an individual authenticated account; passcodes grant circle membership only.
+- Authorize elder, caregiver, and family observer access per circle and action, respecting the elder's choices.
+- Accessible Today view with medication confirmations, upcoming appointments, and daily vitals.
+- Medication schedules with automatic adherence tracking, calendar sync links, and printable doctor summaries.
+- Proactive email reminders for upcoming doses, missed doses, and appointments, independent of page visits.
+- Atomic caregiver alert claims ("I'll handle this") so the circle knows who is following up.
 
 ## Structure and implementation rules
 

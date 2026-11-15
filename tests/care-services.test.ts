@@ -7,21 +7,29 @@ import {
   createAppointment,
   getAppointments,
 } from "../src/lib/appointment-service";
-import { createCircle } from "../src/lib/circle-service";
+import { createCircle, updateCircle } from "../src/lib/circle-service";
 import { ensureDatabaseIndexes } from "../src/lib/db-indexes";
 import { testEmailTransport } from "../src/lib/email/provider";
 import {
   addMedication,
+  archiveMedication,
   getAdherenceHistory,
   getTodayDoses,
   recordDose,
+  updateMedication,
 } from "../src/lib/medication-service";
 import {
   generateReminderJobsForCircle,
   processDueReminderJobs,
 } from "../src/lib/reminder-service";
 
-import type { CareAlert, Membership } from "../src/lib/models";
+import type {
+  Appointment,
+  CareAlert,
+  DoseOccurrence,
+  Membership,
+  ReminderJob,
+} from "../src/lib/models";
 
 vi.mock("server-only", () => ({}));
 
@@ -244,6 +252,170 @@ describe("Medications and Today Schedule", () => {
     expect(history.stats.total).toBeGreaterThanOrEqual(1);
     expect(history.stats.taken).toBeGreaterThanOrEqual(1);
   });
+
+  it("reconciles future occurrences and cancels obsolete reminder jobs on medication edit", async () => {
+    // Add medication with 2 times
+    const medReconcile = await addMedication({
+      userId: caregiver.userId,
+      circleId,
+      input: {
+        name: "Heart Rhythm Med",
+        dosage: "50mg",
+        scheduleTimes: ["08:00", "20:00"],
+        startDate: "2026-11-15",
+        endDate: "2026-11-20",
+      },
+    });
+
+    // Enqueue a pending reminder job for the 20:00 dose
+    const eveningDose = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .findOne({
+        medicationId: medReconcile._id,
+        scheduledTime: "20:00",
+      });
+    expect(eveningDose).toBeTruthy();
+
+    const jobId = "job-reconcile-evening";
+    await db.collection<ReminderJob>("reminder_jobs").insertOne({
+      _id: jobId,
+      circleId,
+      jobType: "upcoming_dose",
+      referenceId: eveningDose!._id,
+      idempotencyKey: `upcoming:${jobId}`,
+      recipientEmail: "elder@example.com",
+      recipientName: "Elder Eleanor",
+      recipientUserId: owner.userId,
+      scheduledFor: new Date("2026-11-15T19:45:00Z"),
+      status: "pending",
+      attempts: 0,
+      maxAttempts: 3,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Edit medication: drop the 20:00 time, change to 08:00 only
+    await updateMedication({
+      userId: caregiver.userId,
+      circleId,
+      medicationId: medReconcile._id,
+      input: {
+        name: "Heart Rhythm Med",
+        dosage: "50mg",
+        scheduleTimes: ["08:00"], // 20:00 removed
+        startDate: "2026-11-15",
+        endDate: "2026-11-20",
+        active: true,
+      },
+    });
+
+    // The 20:00 future occurrence should have been deleted
+    const checkDose = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .findOne({
+        _id: eveningDose!._id,
+      });
+    expect(checkDose).toBeNull();
+
+    // The pending reminder job should have been cancelled
+    const checkJob = await db
+      .collection<ReminderJob>("reminder_jobs")
+      .findOne({ _id: jobId });
+    expect(checkJob?.status).toBe("cancelled");
+    expect(checkJob?.lastError).toContain("Schedule changed");
+  });
+
+  it("cancels future occurrences and pending jobs on medication archiving", async () => {
+    const medArchive = await addMedication({
+      userId: caregiver.userId,
+      circleId,
+      input: {
+        name: "Temporary Antibiotic",
+        dosage: "250mg",
+        scheduleTimes: ["12:00"],
+        startDate: "2026-11-15",
+      },
+    });
+
+    const dose = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .findOne({
+        medicationId: medArchive._id,
+      });
+    expect(dose).toBeTruthy();
+
+    const jobId = "job-archive-test";
+    await db.collection<ReminderJob>("reminder_jobs").insertOne({
+      _id: jobId,
+      circleId,
+      jobType: "upcoming_dose",
+      referenceId: dose!._id,
+      idempotencyKey: `upcoming:${jobId}`,
+      recipientEmail: "elder@example.com",
+      recipientName: "Elder Eleanor",
+      recipientUserId: owner.userId,
+      scheduledFor: new Date(),
+      status: "pending",
+      attempts: 0,
+      maxAttempts: 3,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await archiveMedication({
+      userId: caregiver.userId,
+      circleId,
+      medicationId: medArchive._id,
+    });
+
+    const checkJob = await db
+      .collection<ReminderJob>("reminder_jobs")
+      .findOne({ _id: jobId });
+    expect(checkJob?.status).toBe("cancelled");
+    expect(checkJob?.lastError).toContain("archived");
+  });
+
+  it("validates real calendar dates and rejects impossible dates (e.g. Feb 31)", async () => {
+    await expect(
+      addMedication({
+        userId: caregiver.userId,
+        circleId,
+        input: {
+          name: "Invalid Date Med",
+          dosage: "10mg",
+          scheduleTimes: ["08:00"],
+          startDate: "2026-02-31", // Impossible date!
+        },
+      }),
+    ).rejects.toThrow();
+
+    await expect(
+      addMedication({
+        userId: caregiver.userId,
+        circleId,
+        input: {
+          name: "Backwards Date Med",
+          dosage: "10mg",
+          scheduleTimes: ["08:00"],
+          startDate: "2026-11-20",
+          endDate: "2026-11-10", // endDate < startDate!
+        },
+      }),
+    ).rejects.toThrow();
+
+    await expect(
+      addMedication({
+        userId: caregiver.userId,
+        circleId,
+        input: {
+          name: "Duplicate Times Med",
+          dosage: "10mg",
+          scheduleTimes: ["08:00", "08:00"], // Duplicates!
+          startDate: "2026-11-15",
+        },
+      }),
+    ).rejects.toThrow();
+  });
 });
 
 describe("Appointments", () => {
@@ -368,5 +540,91 @@ describe("Reminder Processing & Email Dispatch", () => {
       new Date(Date.now() + 48 * 3600 * 1000),
     );
     expect(result.processed).toBeGreaterThanOrEqual(0);
+  });
+
+  it("reconciles snoozed future doses when medication is archived", async () => {
+    const medSnooze = await addMedication({
+      userId: caregiver.userId,
+      circleId,
+      input: {
+        name: "Snoozed Medication",
+        dosage: "10mg",
+        scheduleTimes: ["23:00"],
+        startDate: "2026-11-15",
+      },
+    });
+
+    const dose = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .findOne({
+        medicationId: medSnooze._id,
+        scheduledTime: "23:00",
+      });
+    expect(dose).toBeTruthy();
+
+    // Mark snoozed in the future
+    await db.collection<DoseOccurrence>("dose_occurrences").updateOne(
+      { _id: dose!._id },
+      {
+        $set: {
+          status: "snoozed",
+          snoozeUntil: new Date(Date.now() + 3600 * 1000),
+          scheduledTimestamp: new Date(Date.now() + 3600 * 1000),
+        },
+      },
+    );
+
+    // Archive medication
+    await archiveMedication({
+      userId: caregiver.userId,
+      circleId,
+      medicationId: medSnooze._id,
+    });
+
+    // Future snoozed dose should be removed
+    const checkDose = await db
+      .collection<DoseOccurrence>("dose_occurrences")
+      .findOne({
+        _id: dose!._id,
+      });
+    expect(checkDose).toBeNull();
+  });
+
+  it("reconciles future occurrences and appointments when circle timezone changes", async () => {
+    // Circle starts in America/New_York
+    const appt = await createAppointment({
+      userId: owner.userId,
+      circleId,
+      input: {
+        title: "Zone Check Visit",
+        provider: "Dr. Zone",
+        location: "Suite 101",
+        localDate: "2026-11-20",
+        localTime: "10:00",
+      },
+    });
+
+    // In America/New_York (UTC-5 in Nov), 10:00 is 15:00Z
+    expect(appt.scheduledTimestamp.toISOString()).toBe(
+      "2026-11-20T15:00:00.000Z",
+    );
+
+    // Update circle timezone to America/Chicago (UTC-6 in Nov)
+    await updateCircle({
+      userId: owner.userId,
+      circleId,
+      input: {
+        timezone: "America/Chicago",
+      },
+    });
+
+    // In America/Chicago, 10:00 should now be 16:00Z
+    const updatedAppt = await db
+      .collection<Appointment>("appointments")
+      .findOne({ _id: appt._id });
+    expect(updatedAppt).toBeTruthy();
+    expect(new Date(updatedAppt!.scheduledTimestamp).toISOString()).toBe(
+      "2026-11-20T16:00:00.000Z",
+    );
   });
 });

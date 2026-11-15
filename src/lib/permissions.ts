@@ -91,3 +91,18 @@ export function canConfirmDose(
   }
   return false;
 }
+
+/**
+ * Checks whether a member can record daily routine vitals.
+ * Permitted for:
+ * 1. Owner
+ * 2. Caregiver
+ * 3. The elder/care recipient themselves
+ * Read-only family observers are forbidden.
+ */
+export function canRecordVitals(
+  membership: Membership,
+  circle: Circle,
+): boolean {
+  return canConfirmDose(membership, circle);
+}

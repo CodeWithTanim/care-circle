@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { AuthorizationError, requireCircleAccess } from "@/lib/permissions";
+import {
+  AuthorizationError,
+  canRecordVitals,
+  requireCircleAccess,
+} from "@/lib/permissions";
 import { getApiSession } from "@/lib/session";
 import { getTodayLocalDate } from "@/lib/timezone";
 import { getDailyRoutine, upsertDailyRoutine } from "@/lib/vitals-service";
@@ -69,7 +73,21 @@ export async function POST(request: Request, { params }: RouteProps) {
 
   const { circleId } = await params;
   try {
-    const { circle } = await requireCircleAccess(session.user.id, circleId);
+    const { membership, circle } = await requireCircleAccess(
+      session.user.id,
+      circleId,
+    );
+
+    if (!canRecordVitals(membership, circle)) {
+      return NextResponse.json(
+        {
+          error:
+            "Forbidden: only the care recipient, owners, or caregivers can record daily vitals",
+        },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
     const parsed = vitalsInputSchema.safeParse(body);
 

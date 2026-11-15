@@ -3,7 +3,11 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { ensureDatabaseIndexes } from "../src/lib/db-indexes";
 import type { Circle, Membership } from "../src/lib/models";
-import { canConfirmDose, requireCircleAccess } from "../src/lib/permissions";
+import {
+  canConfirmDose,
+  canRecordVitals,
+  requireCircleAccess,
+} from "../src/lib/permissions";
 
 vi.mock("server-only", () => ({}));
 
@@ -209,5 +213,51 @@ describe("Circle Authorization & Permissions", () => {
     expect(canConfirmDose(ownerMem, circle)).toBe(true);
     expect(canConfirmDose(caregiverMem, circle)).toBe(true);
     expect(canConfirmDose(familyMem, circle)).toBe(false);
+  });
+
+  it("enforces role policy on vitals writes: family observer denied, care recipient allowed", async () => {
+    const circle = (await db
+      .collection<Circle>("circles")
+      .findOne({ _id: circleIdA }))!;
+    const ownerMem = (await db
+      .collection<Membership>("memberships")
+      .findOne({ userId: ownerId }))!;
+    const caregiverMem = (await db
+      .collection<Membership>("memberships")
+      .findOne({ userId: caregiverId }))!;
+    const familyMem = (await db
+      .collection<Membership>("memberships")
+      .findOne({ userId: familyId }))!;
+
+    // Owner and caregiver can record vitals
+    expect(canRecordVitals(ownerMem, circle)).toBe(true);
+    expect(canRecordVitals(caregiverMem, circle)).toBe(true);
+
+    // Read-only family observer is denied vitals writes
+    expect(canRecordVitals(familyMem, circle)).toBe(false);
+
+    // Linked care recipient can record their own vitals
+    const recipientUserId = "elder-rose-1";
+    const circleWithRecipient: Circle = {
+      ...circle,
+      recipientUserId,
+    };
+    const recipientMembership: Membership = {
+      _id: randomUUID(),
+      circleId: circleIdA,
+      userId: recipientUserId,
+      role: "family",
+      name: "Rose (Elder)",
+      email: "rose@example.com",
+      joinedAt: new Date(),
+      notifications: {
+        upcomingDoses: true,
+        missedDoses: true,
+        appointments: true,
+      },
+    };
+    expect(canRecordVitals(recipientMembership, circleWithRecipient)).toBe(
+      true,
+    );
   });
 });

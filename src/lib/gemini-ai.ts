@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export interface MedicationAiGuide {
   medicationName: string;
   purpose: string;
@@ -6,123 +8,145 @@ export interface MedicationAiGuide {
   audioSummary: string;
   disclaimer: string;
   source:
-    "Google Gemini 2.5 Flash" | "Care Circle Verified Clinical Knowledgebase";
+    "Google Gemini 2.5 Flash" | "Care Coordination Guidelines (Reference)";
 }
 
-const CLINICAL_KNOWLEDGEBASE: Record<
+const geminiGuideEnvelopeSchema = z.object({
+  purpose: z.string().min(1).max(1000),
+  foodGuidelines: z.string().min(1).max(1000),
+  routineTips: z.string().max(1000).optional(),
+  audioSummary: z.string().max(500).optional(),
+  disclaimer: z.string().max(500).optional(),
+});
+
+const geminiAnswerEnvelopeSchema = z.object({
+  answer: z.string().min(1).max(3000),
+  suggestedFollowUps: z.array(z.string().max(200)).max(5).optional(),
+});
+
+const CARE_COORDINATION_REFERENCE_GUIDES: Record<
   string,
   Omit<MedicationAiGuide, "medicationName" | "source">
 > = {
   lisinopril: {
     purpose:
-      "Helps keep blood pressure in a healthy range, protecting the heart and kidneys.",
+      "Commonly prescribed by doctors to support healthy blood pressure and cardiovascular wellness.",
     foodGuidelines:
-      "Take with a full glass of water. Avoid potassium supplements or salt substitutes containing potassium without physician approval.",
+      "Take with a full glass of water. Review any potassium supplements or salt substitutes with your physician.",
     routineTips:
-      "Best taken at the same time each morning. Rise slowly when getting up from a sitting or lying position to prevent mild lightheadedness.",
+      "Most elders take their dose at the same time each morning. Rise gradually from sitting or lying positions to maintain balance.",
     audioSummary:
-      "Lisinopril supports healthy blood pressure. Drink plenty of water and take your dose at the same time each morning.",
+      "Lisinopril supports healthy blood pressure. Take your prescribed dose with water at your consistent morning time.",
     disclaimer:
-      "Generated for family care coordination. Never adjust doses without consulting your doctor.",
+      "Care coordination reference. Always adhere strictly to your prescribing physician's directions and pharmacy label.",
   },
   metformin: {
     purpose:
-      "Helps the body balance blood sugar naturally and improves how insulin is utilized.",
+      "Prescribed to help manage blood sugar levels as part of a doctor-supervised routine.",
     foodGuidelines:
-      "Always take with or right after a meal (such as breakfast or dinner) to prevent stomach upset. Drink plenty of fluids throughout the day.",
+      "Always take with or immediately following a meal (such as breakfast or dinner) as directed by your clinician.",
     routineTips:
-      "Swallow tablets whole. If you experience mild nausea, having a small snack alongside the dose usually resolves it.",
+      "Swallow tablets whole with water. Keeping a consistent daily meal and dose routine helps maintain balance.",
     audioSummary:
-      "Metformin keeps blood sugar balanced. Remember to take it with or immediately after food.",
+      "Metformin supports balanced blood sugar. Remember to take your prescribed dose with or immediately after food.",
     disclaimer:
-      "Informational care guidance. Always follow your prescribing physician's directions.",
+      "Care coordination reference. Consult your doctor or pharmacist for any personalized medical advice.",
   },
   atorvastatin: {
     purpose:
-      "Supports blood vessels and heart vitality by maintaining balanced cholesterol levels.",
+      "Prescribed to assist in maintaining balanced cholesterol levels and cardiovascular health.",
     foodGuidelines:
-      "Can be taken with or without food. Avoid drinking large amounts of grapefruit juice (more than 1 quart daily).",
+      "Can generally be taken with or without meals as directed. Discuss dietary questions with your doctor.",
     routineTips:
-      "Most commonly scheduled in the evening. Keep a consistent daily rhythm for best heart protection.",
+      "Commonly taken in the evening. Keep a consistent daily routine for best coordination.",
     audioSummary:
-      "Atorvastatin supports cardiovascular wellness. Most elders take it in the evening with water.",
+      "Atorvastatin supports cardiovascular health. Take as prescribed with a glass of water.",
     disclaimer:
-      "Informational care guidance. Consult your doctor regarding any new vitamins or dietary changes.",
+      "Care coordination reference. Check with your doctor before introducing new dietary supplements.",
   },
   amlodipine: {
     purpose:
-      "Relaxes blood vessels so blood flows more easily, easing the workload on the heart.",
+      "Prescribed to support healthy blood pressure and smooth blood flow.",
     foodGuidelines:
-      "Take with or without food, at whatever time of day is easiest to remember consistently.",
+      "Take with water, with or without food, as indicated by your physician.",
     routineTips:
-      "Check ankles occasionally for mild swelling and notify your caregiver if noticed.",
+      "Take at the same time daily. Report any noticeable ankle swelling or changes to your healthcare provider.",
     audioSummary:
-      "Amlodipine relaxes blood vessels to keep circulation smooth and heart rhythm steady.",
+      "Amlodipine supports blood pressure management. Take consistently with water as prescribed.",
     disclaimer:
-      "Non-diagnostic family guide. Always follow your healthcare provider's instructions.",
+      "Care coordination reference. Follow your clinician's specific prescription guidance.",
   },
   levothyroxine: {
     purpose:
-      "Supplies natural thyroid hormone to maintain steady daily energy and healthy metabolism.",
+      "Prescribed to supplement thyroid hormone levels for balanced daily metabolism.",
     foodGuidelines:
-      "Take first thing in the morning on an empty stomach with a full glass of water, 30 to 60 minutes before breakfast or coffee.",
+      "Typically taken in the morning on an empty stomach with a full glass of water, 30 to 60 minutes before food.",
     routineTips:
-      "Separate from calcium supplements, iron pills, or antacids by at least 4 hours.",
+      "Separate from calcium or iron supplements by at least 4 hours, or as directed by your pharmacist.",
     audioSummary:
-      "Levothyroxine should be taken first thing in the morning on an empty stomach with water.",
+      "Levothyroxine is taken in the morning with water, as directed by your prescribing physician.",
     disclaimer:
-      "Family care coordination support. Never alter timing or dose without clinical advice.",
+      "Care coordination reference. Do not alter dose or timing without explicit physician instruction.",
   },
   omeprazole: {
     purpose:
-      "Reduces excess stomach acid to soothe heartburn and protect the stomach lining.",
+      "Prescribed to manage stomach acid and protect the digestive tract lining.",
     foodGuidelines:
-      "Best taken 30 to 60 minutes before your first meal of the day with water.",
+      "Usually taken 30 to 60 minutes before your first meal of the day with water.",
     routineTips:
-      "Swallow whole; do not chew or crush delayed-release capsules.",
+      "Swallow capsules whole with water; do not crush or chew delayed-release capsules.",
     audioSummary:
-      "Omeprazole reduces stomach acid. Take it half an hour before breakfast.",
+      "Omeprazole helps manage stomach acid. Take before breakfast with water as prescribed.",
     disclaimer:
-      "Informational guide. Consult your doctor if acid symptoms persist.",
+      "Care coordination reference. Contact your doctor if gastrointestinal symptoms persist.",
   },
 };
 
 /**
- * Normalizes medication name to check knowledgebase keys.
+ * Exact word / token matching to avoid substring false positives (e.g. 'NotLisinopril').
  */
-function normalizeName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z]/g, "");
+function matchesMedication(name: string, key: string): boolean {
+  const cleanName = name.toLowerCase().trim();
+  const tokens = cleanName.split(/[^a-z0-9]+/);
+  return tokens.includes(key) || cleanName === key;
 }
 
 /**
  * Generate AI-assisted plain-language medication guide.
  * Uses Google Gemini API if GEMINI_API_KEY is present; otherwise falls back gracefully
- * to the Care Circle clinical knowledgebase.
+ * to Care Coordination Guidelines.
  */
 export async function getMedicationAiGuide(params: {
   name: string;
   dosage?: string;
   instructions?: string;
 }): Promise<MedicationAiGuide> {
-  const norm = normalizeName(params.name);
+  const safeName = (params.name || "").trim().slice(0, 100);
+  const safeDosage = (params.dosage || "Standard prescribed dose")
+    .trim()
+    .slice(0, 60);
+  const safeInstructions = (params.instructions || "Follow prescription label")
+    .trim()
+    .slice(0, 300);
 
   // 1. Try Google Gemini API if key is available
   const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey) {
+  if (apiKey && apiKey.trim().length > 0) {
     try {
-      const prompt = `You are an eldercare communication specialist on the Care Circle platform.
+      // Data minimization: generic elder prompt, omitting private personal names
+      const prompt = `You are an eldercare communication assistant on the Care Circle platform.
 Provide a clear, dignified, non-diagnostic plain-language summary for an elderly person and their family regarding the following medication:
-Medication Name: ${params.name}
-Dosage: ${params.dosage || "Standard prescribed dose"}
-Instructions: ${params.instructions || "None specified"}
+Medication Name: ${safeName}
+Dosage: ${safeDosage}
+Instructions: ${safeInstructions}
 
 Respond STRICTLY with a valid JSON object matching this structure (no markdown fences, just JSON):
 {
-  "purpose": "A 1-2 sentence plain-language explanation of what this medicine does in gentle, non-scary terms.",
-  "foodGuidelines": "Clear food, meal, or beverage considerations (e.g. take with breakfast, avoid grapefruit, stay hydrated).",
-  "routineTips": "Practical routine tips for seniors (e.g. morning vs evening, storage, what to do if slightly delayed).",
+  "purpose": "A 1-2 sentence plain-language explanation of what this medicine does in gentle terms.",
+  "foodGuidelines": "Clear food or beverage considerations based on the label.",
+  "routineTips": "Practical routine tips for seniors (e.g. consistency, hydration).",
   "audioSummary": "A calm, gentle spoken sentence for a senior voice assistant.",
-  "disclaimer": "Informational guide for family care circles. Always follow prescribing doctor directives and never adjust dosages automatically."
+  "disclaimer": "Care coordination guide. Always follow prescribing doctor directives and pharmacy labels."
 }`;
 
       const res = await fetch(
@@ -145,54 +169,58 @@ Respond STRICTLY with a valid JSON object matching this structure (no markdown f
         const data = await res.json();
         const text =
           data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-        const parsed = JSON.parse(text);
+        const rawParsed = JSON.parse(text);
+        const parsed = geminiGuideEnvelopeSchema.safeParse(rawParsed);
 
-        if (parsed.purpose && parsed.foodGuidelines) {
+        if (parsed.success) {
           return {
-            medicationName: params.name,
-            purpose: parsed.purpose,
-            foodGuidelines: parsed.foodGuidelines,
+            medicationName: safeName,
+            purpose: parsed.data.purpose,
+            foodGuidelines: parsed.data.foodGuidelines,
             routineTips:
-              parsed.routineTips || "Take consistently at scheduled times.",
+              parsed.data.routineTips ||
+              "Take consistently at scheduled times as prescribed.",
             audioSummary:
-              parsed.audioSummary ||
-              `${params.name} helps maintain your wellness. Take as prescribed with water.`,
+              parsed.data.audioSummary ||
+              `${safeName} supports your daily wellness. Take as prescribed with water.`,
             disclaimer:
-              parsed.disclaimer ||
-              "Informational guide for family care circles. Always follow prescribing doctor directives.",
+              parsed.data.disclaimer ||
+              "Care coordination guide. Always follow prescribing doctor directives and pharmacy labels.",
             source: "Google Gemini 2.5 Flash",
           };
         }
       }
     } catch {
-      // Fall through to knowledgebase
+      // Fall through safely to care coordination reference
     }
   }
 
-  // 2. Check clinical knowledgebase matches
-  for (const [key, entry] of Object.entries(CLINICAL_KNOWLEDGEBASE)) {
-    if (norm.includes(key) || key.includes(norm)) {
+  // 2. Check reference guides with exact token matching
+  for (const [key, entry] of Object.entries(
+    CARE_COORDINATION_REFERENCE_GUIDES,
+  )) {
+    if (matchesMedication(safeName, key)) {
       return {
-        medicationName: params.name,
+        medicationName: safeName,
         ...entry,
-        source: "Care Circle Verified Clinical Knowledgebase",
+        source: "Care Coordination Guidelines (Reference)",
       };
     }
   }
 
-  // 3. Compassionate default for custom/unlisted medications
+  // 3. Safe, supportive default for custom/unlisted medications
   return {
-    medicationName: params.name,
-    purpose: `Prescribed to support your healthcare routine and daily vitality (${params.dosage || "daily regimen"}).`,
-    foodGuidelines: params.instructions
-      ? `Follow doctor's instructions: "${params.instructions}". Take with a glass of water.`
-      : "Take with a glass of water, preferably around regular meal times unless directed otherwise.",
+    medicationName: safeName,
+    purpose: `Prescribed to support daily wellness and healthcare routine (${safeDosage}).`,
+    foodGuidelines: safeInstructions
+      ? `Follow prescription instructions: "${safeInstructions}". Take with water.`
+      : "Take with a glass of water, aligning with regular meal times unless directed otherwise by your clinician.",
     routineTips:
-      "Store at room temperature away from excessive moisture. Keep in original labeled container for safety.",
-    audioSummary: `Here is your reminder for ${params.name}. Take with water as directed by your doctor.`,
+      "Store at room temperature away from excessive moisture. Keep in the original pharmacy labeled container.",
+    audioSummary: `Here is your reminder for ${safeName}. Take with water as directed by your clinician.`,
     disclaimer:
-      "Informational guide for family care circles. Always follow prescribing doctor directives and never adjust dosages automatically.",
-    source: "Care Circle Verified Clinical Knowledgebase",
+      "Care coordination reference for families. Always follow prescribing doctor directives and never adjust dosages automatically.",
+    source: "Care Coordination Guidelines (Reference)",
   };
 }
 
@@ -205,7 +233,7 @@ export function hasGeminiApiKey(): boolean {
 export interface CareAiAnswer {
   answer: string;
   source:
-    "Google Gemini 2.5 Flash" | "Care Circle Verified Clinical Knowledgebase";
+    "Google Gemini 2.5 Flash" | "Care Coordination Guidelines (Reference)";
   suggestedFollowUps: string[];
   disclaimer: string;
 }
@@ -216,22 +244,25 @@ export async function askGeminiCareQuestion(params: {
   recipientName?: string;
   medicationsSummary?: string;
 }): Promise<CareAiAnswer> {
+  const safeQuestion = (params.question || "").trim().slice(0, 500);
+  const safeMedSummary = (params.medicationsSummary || "Standard daily routine")
+    .trim()
+    .slice(0, 200);
+
   const apiKey = process.env.GEMINI_API_KEY;
-  const recipient = params.recipientName || "the care recipient";
 
-  if (apiKey) {
+  if (apiKey && apiKey.trim().length > 0) {
     try {
-      const prompt = `You are an empathetic, highly trained eldercare communication specialist on the Care Circle platform.
-Care Recipient (Elder): ${recipient}
-Known Regimen/Circle: ${params.circleName || "Family Care Circle"} (${params.medicationsSummary || "Standard elder daily healthcare routine"})
-
-User Question: "${params.question}"
+      // Data minimization: generic eldercare query, omit identifying user/circle names
+      const prompt = `You are an empathetic eldercare communication assistant on the Care Circle platform.
+Care Context: Standard elder daily routine (${safeMedSummary})
+User Question: "${safeQuestion}"
 
 Guidelines:
-1. Provide a warm, clear, plain-language, non-technical explanation suitable for family caregivers and seniors.
+1. Provide a warm, clear, plain-language explanation suitable for family caregivers and seniors.
 2. Focus on food guidelines, hydration, routine adherence, gentle care tips, and communication.
 3. NEVER prescribe, NEVER diagnose, and NEVER advise changing doses without a doctor.
-4. Keep the answer structured and easy to read (max 3-4 short paragraphs or bullet points).
+4. Keep the answer structured and easy to read (max 3 short paragraphs or bullet points).
 5. Always remind the caregiver to consult the recipient's primary doctor for medical decisions.
 
 Respond STRICTLY with a valid JSON object matching this structure (no markdown fences, just JSON):
@@ -252,7 +283,7 @@ Respond STRICTLY with a valid JSON object matching this structure (no markdown f
               responseMimeType: "application/json",
             },
           }),
-          signal: AbortSignal.timeout(8000),
+          signal: AbortSignal.timeout(6000),
         },
       );
 
@@ -260,41 +291,40 @@ Respond STRICTLY with a valid JSON object matching this structure (no markdown f
         const data = await res.json();
         const text =
           data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-        const parsed = JSON.parse(text);
-        if (parsed.answer) {
+        const rawParsed = JSON.parse(text);
+        const parsed = geminiAnswerEnvelopeSchema.safeParse(rawParsed);
+        if (parsed.success && parsed.data.answer) {
           return {
-            answer: parsed.answer,
+            answer: parsed.data.answer,
             source: "Google Gemini 2.5 Flash",
-            suggestedFollowUps: Array.isArray(parsed.suggestedFollowUps)
-              ? parsed.suggestedFollowUps
-              : [],
+            suggestedFollowUps: parsed.data.suggestedFollowUps || [],
             disclaimer:
-              "Informational care guidance powered by Google Gemini. Always follow prescribing doctor directives.",
+              "Informational care guidance powered by Google Gemini. Always verify with your prescribing physician.",
           };
         }
       }
     } catch {
-      // Fall through to knowledgebase
+      // Fall through to reference guidelines
     }
   }
 
-  // Clinical Knowledgebase Fallback
-  const q = params.question.toLowerCase();
+  // Care Coordination Guidelines Reference Fallback
+  const q = safeQuestion.toLowerCase();
 
   if (q.includes("miss") || q.includes("forgot") || q.includes("late")) {
     return {
-      answer: `When a dose is missed:
-1. **Never double up:** Do not take two doses at once to make up for a missed scheduled time.
-2. **Timing Window:** If you remember within 1 to 2 hours of the scheduled time, take it right away with water. If it is already close to the next scheduled dose, skip the missed dose and resume normal schedule.
-3. **Care Coordination:** Use the Care Circle alert to click "I'll handle this" so other family members know it is being managed and avoid accidental double administration.
-4. **Call Doctor or Pharmacist:** If ever unsure about specific medication windows, contact the primary doctor or local pharmacy.`,
-      source: "Care Circle Verified Clinical Knowledgebase",
+      answer: `Care coordination guidance for a missed or delayed dose:
+1. **Check Prescription Label:** Refer directly to the instructions printed on the pharmacy bottle or medication packaging for the specific medication's missed-dose policy.
+2. **Never Double Up:** Do not take an extra or double dose to make up for a missed dose unless explicitly directed by your prescribing physician.
+3. **Coordinate with Your Care Circle:** Check the Today view to see if another caregiver has already marked the dose taken or clicked "I'll handle this", preventing accidental duplicate administration.
+4. **Contact Prescriber or Pharmacist:** For specific timing guidance on whether to take or hold the dose, call your pharmacist or physician's office directly.`,
+      source: "Care Coordination Guidelines (Reference)",
       suggestedFollowUps: [
-        `How do I confirm a dose in Care Circle?`,
-        `Should blood pressure medicine be taken at night if missed in the morning?`,
+        `How do I coordinate an alert in Care Circle?`,
+        `How do I contact the pharmacy listed for this prescription?`,
       ],
       disclaimer:
-        "Informational care guidance. Never adjust or double doses without clinical advice.",
+        "Care coordination guidance only. Consult your pharmacist or prescribing doctor for medical advice on missed doses.",
     };
   }
 
@@ -306,35 +336,35 @@ Respond STRICTLY with a valid JSON object matching this structure (no markdown f
     q.includes("dinner")
   ) {
     return {
-      answer: `Meal and Food Considerations for ${recipient}:
-- **Metformin:** Always take with or immediately following a full meal (breakfast or dinner) to protect the stomach and prevent nausea.
-- **Lisinopril / Blood Pressure:** Can be taken with or without food. Drink a full 8 oz glass of water. Avoid salt substitutes with excess potassium unless approved by a physician.
-- **Vitamin D3:** Absorbed best when taken with a meal containing healthy dietary fats (like avocado, eggs, or milk).
+      answer: `Meal and Food Considerations for Family Care:
+- **Metformin:** Always take with or immediately following a full meal (breakfast or dinner) as directed by your prescribing clinician to protect the stomach.
+- **Lisinopril / Blood Pressure:** Can be taken with or without food. Avoid salt substitutes with excess potassium unless approved by a physician.
+- **Vitamin D3:** Follow prescription instructions regarding meals or dietary supplements.
 - **Consistency:** Taking medications at the same point during daily meal routines creates strong memory anchors for seniors.`,
-      source: "Care Circle Verified Clinical Knowledgebase",
+      source: "Care Coordination Guidelines (Reference)",
       suggestedFollowUps: [
         `Can vitamins be taken at the same time as prescription medicines?`,
         `What foods should be avoided with blood pressure medication?`,
       ],
       disclaimer:
-        "Informational care guidance. Always verify dietary changes with your healthcare provider.",
+        "Care coordination guidance. Always verify dietary questions with your healthcare provider.",
     };
   }
 
   if (q.includes("water") || q.includes("hydrat") || q.includes("drink")) {
     return {
-      answer: `Hydration Best Practices for Seniors:
-- **Daily Target:** Aim for 5 to 7 glasses (approximately 1.5 to 2 liters) of fluid daily, unless your doctor has prescribed fluid restrictions for heart failure or kidney conditions.
-- **Visual Cues:** Keep a fresh pitcher or lightweight tumbler within easy arm's reach of ${recipient}'s favorite chair.
-- **Medicine Pairing:** Each tablet should always be swallowed with a full glass of plain water to ensure it dissolves properly in the stomach.
-- **Track Progress:** Log daily water glasses in Care Circle's Daily Vitals tracker on the Today view.`,
-      source: "Care Circle Verified Clinical Knowledgebase",
+      answer: `Daily Hydration Care Coordination:
+- **Physician Instructions:** Hydration targets must follow your doctor's personalized guidance, especially for individuals with heart failure, kidney disease, or fluid restriction plans.
+- **Accessibility:** Keep water or preferred fluids easily accessible in comfortable, easy-to-grip tumblers.
+- **Pairing with Routine:** Offer sips of water with daily routine activities and during medication times as permitted by clinical guidance.
+- **Track in Care Circle:** Caregivers can log daily fluid intake on the Today view to monitor consistency across family members.`,
+      source: "Care Coordination Guidelines (Reference)",
       suggestedFollowUps: [
-        `What are signs of mild dehydration in elderly individuals?`,
-        `How does proper hydration affect blood pressure readings?`,
+        `How do I log water intake on the Today dashboard?`,
+        `Where can I note fluid restriction guidelines from our doctor?`,
       ],
       disclaimer:
-        "Informational care guidance. Follow physician-specified fluid limits if heart or kidney conditions exist.",
+        "Care coordination guidance only. Follow doctor-specified fluid limits for heart or kidney conditions.",
     };
   }
 
@@ -349,28 +379,28 @@ Respond STRICTLY with a valid JSON object matching this structure (no markdown f
 - **Rise Slowly:** When transitioning from bed or chair, sit on the edge for 30 to 60 seconds before standing up. This prevents orthostatic lightheadedness common with blood pressure medications like Lisinopril.
 - **Consistent Log:** Check and record blood pressure at the same time every morning (before medication and breakfast) using the Care Circle Vitals tracker.
 - **Doctor Checkpoints:** Note any readings above 140/90 or below 100/60 to discuss with the cardiologist or primary doctor.`,
-      source: "Care Circle Verified Clinical Knowledgebase",
+      source: "Care Coordination Guidelines (Reference)",
       suggestedFollowUps: [
         `What is the ideal blood pressure range for an elder over 70?`,
         `How to prepare for an upcoming cardiology appointment?`,
       ],
       disclaimer:
-        "Informational care guidance. For sudden severe dizziness, chest pain, or fainting, contact emergency services immediately.",
+        "Care coordination guidance. For sudden severe dizziness, chest pain, or fainting, contact emergency services immediately.",
     };
   }
 
   return {
-    answer: `Here is care coordination guidance for ${recipient}:
+    answer: `Here is general care coordination guidance:
 - **Routine Consistency:** Keep daily medication schedules aligned with regular daily anchors (breakfast, afternoon walk, bedtime).
 - **Circle Collaboration:** Family members can view today's schedule, record vitals, and handle alerts together in the Care Circle dashboard.
 - **Medical Documentation:** Use the Doctor Visit Summary tool in the Medications or Appointments view before physician visits to bring a complete list of current medications and adherence records.`,
-    source: "Care Circle Verified Clinical Knowledgebase",
+    source: "Care Coordination Guidelines (Reference)",
     suggestedFollowUps: [
       `What are the food guidelines for current medications?`,
       `How do I print a doctor's visit summary?`,
       `What to do if a dose is missed?`,
     ],
     disclaimer:
-      "Informational care guidance. Consult a licensed healthcare provider for all medical decisions.",
+      "Care coordination guidance. Consult a licensed healthcare provider for all medical decisions.",
   };
 }

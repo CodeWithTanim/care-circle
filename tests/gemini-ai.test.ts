@@ -1,8 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { askGeminiCareQuestion, getMedicationAiGuide } from "@/lib/gemini-ai";
 
 describe("Gemini AI Care Assistant & Medication Guide", () => {
-  it("generates clinical knowledgebase guidance for Lisinopril", async () => {
+  beforeEach(() => {
+    vi.stubEnv("GEMINI_API_KEY", "");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("generates care coordination reference guidance for Lisinopril", async () => {
     const guide = await getMedicationAiGuide({
       name: "Lisinopril",
       dosage: "10mg",
@@ -13,11 +22,11 @@ describe("Gemini AI Care Assistant & Medication Guide", () => {
     expect(guide.purpose.toLowerCase()).toContain("blood pressure");
     expect(guide.foodGuidelines).toContain("water");
     expect(guide.routineTips.toLowerCase()).toContain("morning");
-    expect(guide.audioSummary).toBeTruthy();
-    expect(guide.disclaimer).toBeTruthy();
+    expect(guide.source).toBe("Care Coordination Guidelines (Reference)");
+    expect(guide.disclaimer.toLowerCase()).toContain("care coordination");
   });
 
-  it("generates clinical knowledgebase guidance for Metformin", async () => {
+  it("generates care coordination reference guidance for Metformin", async () => {
     const guide = await getMedicationAiGuide({
       name: "Metformin",
       dosage: "500mg",
@@ -27,6 +36,18 @@ describe("Gemini AI Care Assistant & Medication Guide", () => {
     expect(guide.medicationName).toBe("Metformin");
     expect(guide.purpose.toLowerCase()).toContain("blood sugar");
     expect(guide.foodGuidelines.toLowerCase()).toContain("meal");
+    expect(guide.source).toBe("Care Coordination Guidelines (Reference)");
+  });
+
+  it("avoids false substring matching (e.g. 'NotLisinopril' does not match Lisinopril)", async () => {
+    const guide = await getMedicationAiGuide({
+      name: "NotLisinopril Custom Compound",
+      dosage: "25mg",
+    });
+
+    // Should NOT have Lisinopril specific blood pressure text
+    expect(guide.purpose).not.toContain("protecting the heart and kidneys");
+    expect(guide.purpose).toContain("Prescribed to support daily wellness");
   });
 
   it("provides safe, non-diagnostic guidance for unlisted medications", async () => {
@@ -40,9 +61,10 @@ describe("Gemini AI Care Assistant & Medication Guide", () => {
     expect(guide.purpose).toBeTruthy();
     expect(guide.foodGuidelines).toContain("Take with breakfast");
     expect(guide.disclaimer.toLowerCase()).toContain("never adjust dosages");
+    expect(guide.source).toBe("Care Coordination Guidelines (Reference)");
   });
 
-  it("answers eldercare care questions with knowledgebase fallback", async () => {
+  it("answers eldercare care questions with reference fallback deferring to label and doctor", async () => {
     const res = await askGeminiCareQuestion({
       question: "What should we do if Eleanor misses her morning dose?",
       circleName: "Vance Family Circle",
@@ -51,18 +73,134 @@ describe("Gemini AI Care Assistant & Medication Guide", () => {
     });
 
     expect(res.answer.toLowerCase()).toContain("never double");
-    expect(res.source).toBeTruthy();
+    expect(res.answer.toLowerCase()).toContain("prescription label");
+    expect(res.answer.toLowerCase()).toContain("pharmacist");
+    // Rejects universal 1-2 hour take window
+    expect(res.answer.toLowerCase()).not.toContain("1 to 2 hours");
+    expect(res.source).toBe("Care Coordination Guidelines (Reference)");
     expect(res.suggestedFollowUps.length).toBeGreaterThan(0);
-    expect(res.disclaimer.toLowerCase()).toContain("informational");
+    expect(res.disclaimer.toLowerCase()).toContain("care coordination");
   });
 
-  it("answers hydration and water routine questions safely", async () => {
+  it("answers hydration questions safely without blanket universal fluid volume", async () => {
     const res = await askGeminiCareQuestion({
       question: "How much water should Eleanor drink each day?",
       recipientName: "Eleanor Vance",
     });
 
     expect(res.answer.toLowerCase()).toContain("hydration");
-    expect(res.answer).toContain("glasses");
+    expect(res.answer.toLowerCase()).toContain("physician");
+    expect(res.answer.toLowerCase()).not.toContain("5 to 7 glasses");
+    expect(res.source).toBe("Care Coordination Guidelines (Reference)");
+  });
+
+  it("processes successful live Gemini API response when HTTP returns valid JSON", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "mock-valid-gemini-key");
+
+    const mockResponsePayload = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                text: JSON.stringify({
+                  purpose:
+                    "Gentle medicine to maintain steady cardiovascular pressure.",
+                  foodGuidelines:
+                    "Drink a full tumbler of water with your dose.",
+                  routineTips:
+                    "Keep on nightstand with a water glass for consistent mornings.",
+                  audioSummary:
+                    "Lisinopril helps your heart stay healthy. Take with water.",
+                  disclaimer: "Follow prescribing physician directives.",
+                }),
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => mockResponsePayload,
+    } as Response);
+
+    const guide = await getMedicationAiGuide({
+      name: "Lisinopril",
+      dosage: "10mg",
+    });
+
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(guide.source).toBe("Google Gemini 2.5 Flash");
+    expect(guide.purpose).toBe(
+      "Gentle medicine to maintain steady cardiovascular pressure.",
+    );
+    expect(guide.foodGuidelines).toBe(
+      "Drink a full tumbler of water with your dose.",
+    );
+  });
+
+  it("safely falls back to reference guidance when Gemini API returns malformed JSON", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "mock-valid-gemini-key");
+
+    // Broken/truncated JSON string from LLM
+    const brokenPayload = {
+      candidates: [
+        {
+          content: {
+            parts: [{ text: `{"purpose": "broken json without closing brace` }],
+          },
+        },
+      ],
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => brokenPayload,
+    } as Response);
+
+    const guide = await getMedicationAiGuide({
+      name: "Lisinopril",
+      dosage: "10mg",
+    });
+
+    // Successfully fell back to reference without crashing
+    expect(guide.source).toBe("Care Coordination Guidelines (Reference)");
+    expect(guide.medicationName).toBe("Lisinopril");
+  });
+
+  it("safely falls back to reference guidance when Gemini API returns 429 quota error", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "mock-valid-gemini-key");
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      text: async () => "Resource has been exhausted (e.g. check quota).",
+    } as Response);
+
+    const answer = await askGeminiCareQuestion({
+      question: "What to do if dose is missed?",
+    });
+
+    expect(answer.source).toBe("Care Coordination Guidelines (Reference)");
+    expect(answer.answer.toLowerCase()).toContain("never double");
+  });
+
+  it("safely falls back to reference guidance when Gemini API request times out", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "mock-valid-gemini-key");
+
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
+      new Error("The operation was aborted due to timeout"),
+    );
+
+    const answer = await askGeminiCareQuestion({
+      question: "How many glasses of water should an elder drink?",
+    });
+
+    expect(answer.source).toBe("Care Coordination Guidelines (Reference)");
+    expect(answer.answer.toLowerCase()).toContain("hydration");
   });
 });

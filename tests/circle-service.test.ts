@@ -164,7 +164,7 @@ describe("Care Circle & Passcode Service", () => {
         userName: "Other Person",
         passcode: rawPasscode,
       }),
-    ).rejects.toThrow("revoked");
+    ).rejects.toThrow("Invalid or expired");
   });
 
   it("allows ownership transfer to an existing member", async () => {
@@ -182,5 +182,70 @@ describe("Care Circle & Passcode Service", () => {
       (m) => m.userId === ownerUser.userId,
     );
     expect(prevOwnerMem?.role).toBe("caregiver");
+  });
+
+  it("enforces persistent rate limiting on repeated failed join attempts", async () => {
+    const guessingUserId = "attacker-user-99";
+    const { rawPasscode } = await createInvite({
+      userId: caregiverUser.userId, // now owner
+      circleId,
+      input: { role: "family", expiresInHours: 24, maxUses: 1 },
+    });
+
+    // Make 5 failed attempts with invalid passcodes
+    for (let i = 0; i < 5; i++) {
+      await expect(
+        joinCircleWithPasscode({
+          userId: guessingUserId,
+          userEmail: "attacker@example.com",
+          userName: "Attacker",
+          passcode: `WRONG-CODE-${i}`,
+        }),
+      ).rejects.toThrow("Invalid or expired");
+    }
+
+    // 6th attempt should be locked out with HTTP 429 even if they guess the correct passcode
+    try {
+      await joinCircleWithPasscode({
+        userId: guessingUserId,
+        userEmail: "attacker@example.com",
+        userName: "Attacker",
+        passcode: rawPasscode,
+      });
+      expect.fail("Should have thrown rate limit lockout error");
+    } catch (err: unknown) {
+      expect((err as { status?: number }).status).toBe(429);
+      expect((err as Error).message).toContain("Too many failed join attempts");
+    }
+
+    // Proves valid invite is NOT locked out for a legitimate user despite the attacker's attempts
+    const legitUser = {
+      userId: "legit-user-1",
+      userEmail: "legit@example.com",
+      userName: "Legit Relative",
+    };
+    const legitJoin = await joinCircleWithPasscode({
+      ...legitUser,
+      passcode: rawPasscode,
+    });
+    expect(legitJoin.circle._id).toBe(circleId);
+    expect(legitJoin.membership.userId).toBe(legitUser.userId);
+  });
+
+  it("rejects invalid IANA timezones and malformed input on circle creation", async () => {
+    await expect(
+      createCircle({
+        userId: "tz-tester",
+        userEmail: "tz@example.com",
+        userName: "TZ Tester",
+        input: {
+          name: "Invalid Zone Circle",
+          recipientName: "Elder",
+          recipientRelationship: "self",
+          timezone: "Invalid/Fake_Zone_Name",
+          sharingConsent: true,
+        },
+      }),
+    ).rejects.toThrow("timezone");
   });
 });

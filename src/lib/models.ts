@@ -102,6 +102,7 @@ export interface Appointment {
   localTime: string; // "HH:MM"
   notes?: string;
   status: AppointmentStatus;
+  revision?: number;
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -150,9 +151,13 @@ export interface ReminderJob {
   status: ReminderJobStatus;
   attempts: number;
   maxAttempts: number;
+  scheduleRevision?: number;
   claimedAt?: Date | null;
   claimedByWorker?: string | null;
+  claimToken?: string | null;
   sentAt?: Date | null;
+  deliveryMode?: "live" | "test_transport" | null;
+  providerMessageId?: string | null;
   lastError?: string | null;
   createdAt: Date;
   updatedAt: Date;

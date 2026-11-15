@@ -935,13 +935,15 @@ export function TodayView({
                   <p className="text-base font-semibold text-muted-foreground">
                     Not logged today
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsVitalsDialogOpen(true)}
-                    className="text-xs text-[#0f4c47] hover:underline font-semibold mt-1"
-                  >
-                    + Add BP reading
-                  </button>
+                  {canConfirm && (
+                    <button
+                      type="button"
+                      onClick={() => setIsVitalsDialogOpen(true)}
+                      className="text-xs text-[#0f4c47] hover:underline font-semibold mt-1 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      + Add BP reading
+                    </button>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -984,13 +986,15 @@ export function TodayView({
                   <p className="text-base font-semibold text-muted-foreground">
                     Not logged today
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsVitalsDialogOpen(true)}
-                    className="text-xs text-[#0f4c47] hover:underline font-semibold mt-1"
-                  >
-                    + Add glucose reading
-                  </button>
+                  {canConfirm && (
+                    <button
+                      type="button"
+                      onClick={() => setIsVitalsDialogOpen(true)}
+                      className="text-xs text-[#0f4c47] hover:underline font-semibold mt-1 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      + Add glucose reading
+                    </button>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -1011,7 +1015,10 @@ export function TodayView({
             </CardHeader>
             <CardContent className="p-4 pt-1 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1">
+                <div
+                  className="flex items-center gap-1"
+                  aria-label="Glasses drank today"
+                >
                   {[...Array(8)].map((_, i) => (
                     <div
                       key={i}
@@ -1024,20 +1031,24 @@ export function TodayView({
                     />
                   ))}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => handleUpdateWaterGlasses(-1)}
-                    className="size-7 rounded-md border text-xs font-bold hover:bg-muted"
-                    title="Remove a glass"
+                    disabled={!canConfirm}
+                    className="h-11 w-11 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border text-base font-bold transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:pointer-events-none"
+                    aria-label="Decrease daily water intake by 1 glass"
+                    title={!canConfirm ? "Read-only view" : "Remove a glass"}
                   >
                     -
                   </button>
                   <button
                     type="button"
                     onClick={() => handleUpdateWaterGlasses(1)}
-                    className="size-7 rounded-md border bg-sky-50 text-sky-800 text-xs font-bold hover:bg-sky-100"
-                    title="Add a glass"
+                    disabled={!canConfirm}
+                    className="h-11 w-11 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-sky-300 bg-sky-50 text-sky-800 text-base font-bold transition-colors hover:bg-sky-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:pointer-events-none"
+                    aria-label="Increase daily water intake by 1 glass"
+                    title={!canConfirm ? "Read-only view" : "Add a glass"}
                   >
                     +
                   </button>
@@ -1066,11 +1077,13 @@ export function TodayView({
               <button
                 type="button"
                 onClick={handleToggleWalk}
-                className={`w-full flex items-center justify-between p-2 rounded-lg border text-xs font-bold transition-all ${
+                disabled={!canConfirm}
+                className={`w-full min-h-[44px] flex items-center justify-between p-3 rounded-lg border text-xs font-bold transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:pointer-events-none ${
                   vitals?.wellnessWalkDone
                     ? "bg-emerald-50 border-emerald-300 text-emerald-800"
                     : "border-border hover:bg-muted text-foreground"
                 }`}
+                aria-label="15-minute gentle mobility walk routine"
               >
                 <span>15-min Gentle Walk</span>
                 <span>{vitals?.wellnessWalkDone ? "✓ Done" : "Mark Done"}</span>
