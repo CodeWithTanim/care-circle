@@ -6,13 +6,42 @@ import { getDb } from "@/lib/db";
 import { getEmailProvider } from "@/lib/email/provider";
 import { getServerEnv } from "@/lib/env";
 
+function getTrustedOrigins(authUrl: string): string[] {
+  const baseOrigin = new URL(authUrl).origin;
+  const origins = new Set<string>([baseOrigin]);
+
+  // Support local development ports and loopback addresses
+  const authHostname = new URL(authUrl).hostname;
+  const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(authHostname);
+
+  if (process.env.NODE_ENV !== "production" || isLoopback) {
+    origins.add("http://localhost:*");
+    origins.add("http://127.0.0.1:*");
+    origins.add("http://[::1]:*");
+    origins.add("https://localhost:*");
+    origins.add("https://127.0.0.1:*");
+    origins.add("http://192.168.*.*:*");
+    origins.add("http://10.*.*.*:*");
+    origins.add("http://172.16.*.*:*");
+  }
+
+  if (process.env.BETTER_AUTH_TRUSTED_ORIGINS) {
+    for (const origin of process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",")) {
+      const trimmed = origin.trim();
+      if (trimmed) origins.add(trimmed);
+    }
+  }
+
+  return Array.from(origins);
+}
+
 function createAuth() {
   const env = getServerEnv();
   return betterAuth({
     appName: "Care Circle",
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [new URL(env.BETTER_AUTH_URL).origin],
+    trustedOrigins: getTrustedOrigins(env.BETTER_AUTH_URL),
     advanced: { disableOriginCheck: false, disableCSRFCheck: false },
     // No client option: works with standalone local MongoDB without transactions.
     database: mongodbAdapter(getDb()),
