@@ -38,6 +38,7 @@ export interface Invite {
   codeHash: string; // SHA-256 hash of passcode
   role: "caregiver" | "family";
   label?: string; // Optional label e.g. "For Dr. Smith" or "For daughter Sarah"
+  isRecipientInvite?: boolean; // When true, links the joiner to circle.recipientUserId
   createdBy: string;
   createdAt: Date;
   expiresAt: Date;

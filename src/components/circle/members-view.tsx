@@ -6,6 +6,7 @@ import {
   Check,
   Copy,
   Crown,
+  Heart,
   KeyRound,
   ShieldCheck,
   Trash2,
@@ -52,9 +53,9 @@ export function MembersView({
 
   // Invite modal state
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  const [inviteRole, setInviteRole] = useState<"caregiver" | "family">(
-    "family",
-  );
+  const [inviteRoleType, setInviteRoleType] = useState<
+    "patient" | "caregiver" | "family"
+  >("patient");
   const [inviteLabel, setInviteLabel] = useState("");
   const [expiresInHours, setExpiresInHours] = useState(48);
   const [generatedPasscode, setGeneratedPasscode] = useState<string | null>(
@@ -109,12 +110,22 @@ export function MembersView({
     e.preventDefault();
     setCreatingInvite(true);
     try {
+      const isRecipientInvite = inviteRoleType === "patient";
+      const actualRole: "caregiver" | "family" =
+        inviteRoleType === "family" ? "family" : "caregiver";
+      const fallbackLabel = isRecipientInvite
+        ? `For Patient (${circle.recipientName})`
+        : inviteRoleType === "caregiver"
+          ? "Caregiver"
+          : "Family Observer";
+
       const res = await fetch(`/api/circles/${circle._id}/invites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          role: inviteRole,
-          label: inviteLabel.trim() || undefined,
+          role: actualRole,
+          isRecipientInvite,
+          label: inviteLabel.trim() || fallbackLabel,
           expiresInHours: Number(expiresInHours),
           maxUses: 1,
         }),
@@ -301,6 +312,17 @@ export function MembersView({
                     <span className="text-lg font-semibold text-foreground">
                       {m.name}
                     </span>
+                    {(m.userId === circle.recipientUserId ||
+                      (circle.isRecipientUser &&
+                        m.userId === circle.createdBy)) && (
+                      <Badge className="bg-[#0f4c47] text-white gap-1 text-xs font-semibold">
+                        <Heart
+                          className="size-3 fill-current"
+                          aria-hidden="true"
+                        />
+                        Patient
+                      </Badge>
+                    )}
                     {m.role === "owner" && (
                       <Badge className="bg-amber-500 hover:bg-amber-600 gap-1 text-xs">
                         <Crown className="size-3" aria-hidden="true" />
@@ -359,6 +381,11 @@ export function MembersView({
                       <span className="font-semibold text-base">
                         {inv.label || "Care Circle Invitation"}
                       </span>
+                      {inv.isRecipientInvite && (
+                        <Badge className="bg-[#0f4c47] text-white text-xs font-semibold">
+                          For Patient ({circle.recipientName})
+                        </Badge>
+                      )}
                       <Badge variant="outline" className="capitalize text-xs">
                         Role: {inv.role}
                       </Badge>
@@ -504,7 +531,14 @@ export function MembersView({
 
               <div className="space-y-2 text-left text-sm text-muted-foreground">
                 <p>
-                  • Single-use passcode for <strong>{inviteRole}</strong>{" "}
+                  • Single-use passcode for{" "}
+                  <strong className="text-foreground">
+                    {inviteRoleType === "patient"
+                      ? `Patient (${circle.recipientName})`
+                      : inviteRoleType === "caregiver"
+                        ? "Caregiver"
+                        : "Family Observer"}
+                  </strong>{" "}
                   access.
                 </p>
                 <p>• Expiring in {expiresInHours} hours.</p>
@@ -538,25 +572,38 @@ export function MembersView({
           ) : (
             <form onSubmit={handleCreateInvite} className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="inviteRole" className="text-base font-medium">
+                <Label htmlFor="inviteRole" className="text-base font-semibold">
                   Role to Grant
                 </Label>
                 <select
                   id="inviteRole"
-                  value={inviteRole}
+                  value={inviteRoleType}
                   onChange={(e) =>
-                    setInviteRole(e.target.value as "caregiver" | "family")
+                    setInviteRoleType(
+                      e.target.value as "patient" | "caregiver" | "family",
+                    )
                   }
                   className="w-full min-h-[44px] rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  <option value="family">
-                    Family Observer (View schedules, receive alerts, claim
-                    follow-ups)
+                  <option value="patient">
+                    Patient / Care Recipient ({circle.recipientName}) — Full
+                    dignity, Senior Mode &amp; Check-ins
                   </option>
                   <option value="caregiver">
                     Caregiver (Manage medicines, record doses, schedule visits)
                   </option>
+                  <option value="family">
+                    Family Observer (View schedules, receive alerts, claim
+                    follow-ups)
+                  </option>
                 </select>
+                <p className="text-xs text-muted-foreground">
+                  {inviteRoleType === "patient"
+                    ? `Creates an invitation passcode for ${circle.recipientName}. When they enter it, their account is permanently linked as the care recipient.`
+                    : inviteRoleType === "caregiver"
+                      ? "Authorized caregiver with full medication and appointment management permissions."
+                      : "Family observer with transparent view-only access and follow-up alert claiming."}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -565,7 +612,11 @@ export function MembersView({
                 </Label>
                 <Input
                   id="inviteLabel"
-                  placeholder="e.g. For Dr. Smith or Daughter Sarah"
+                  placeholder={
+                    inviteRoleType === "patient"
+                      ? `For Patient ${circle.recipientName}`
+                      : "e.g. For Dr. Smith or Daughter Sarah"
+                  }
                   value={inviteLabel}
                   onChange={(e) => setInviteLabel(e.target.value)}
                   className="min-h-[44px] text-base"

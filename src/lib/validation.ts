@@ -51,6 +51,7 @@ export const createInviteSchema = z.object({
   label: z.string().trim().max(60).optional(),
   expiresInHours: z.number().int().min(1).max(168).default(48), // 1 hour to 7 days
   maxUses: z.number().int().min(1).max(10).default(1),
+  isRecipientInvite: z.boolean().optional(),
 });
 
 export const joinCircleSchema = z.object({

@@ -227,6 +227,7 @@ export async function createInvite(params: {
     codeHash,
     role: validated.role,
     label: validated.label,
+    isRecipientInvite: validated.isRecipientInvite || false,
     createdBy: params.userId,
     createdAt: now,
     expiresAt,
@@ -352,6 +353,14 @@ export async function joinCircleWithPasscode(params: {
 
   try {
     await db.collection<Membership>("memberships").insertOne(membership);
+    if (invite.isRecipientInvite) {
+      await db
+        .collection<Circle>("circles")
+        .updateOne(
+          { _id: circle._id },
+          { $set: { recipientUserId: params.userId, updatedAt: new Date() } },
+        );
+    }
   } catch (err: unknown) {
     // Duplicate key safety
     const existing = await db
