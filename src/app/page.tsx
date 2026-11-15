@@ -19,6 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { HomeNavbar } from "@/components/home/home-navbar";
+import { getApiSession } from "@/lib/session";
 
 const TICKER_ITEMS = [
   "★ Medication Coordination",
@@ -33,82 +35,14 @@ const TICKER_ITEMS = [
   "Proactive Notifications",
 ];
 
-export default function Home() {
+export default async function Home() {
+  const session = await getApiSession();
+  const isLoggedIn = !!session;
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-teal-100 selection:text-teal-900">
       {/* ─── Top Navigation Bar ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-[#0f4c47] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md p-1"
-          >
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#0f4c47] text-white shadow-md shadow-teal-900/10">
-              <HeartHandshake className="size-6" aria-hidden="true" />
-            </div>
-            <span className="font-extrabold tracking-tight text-foreground">
-              Care<span className="text-[#0f4c47]">Circle</span>
-            </span>
-          </Link>
-
-          {/* Desktop Nav Links */}
-          <nav
-            aria-label="Main Navigation"
-            className="hidden lg:flex items-center gap-8 text-sm font-medium text-foreground/80"
-          >
-            <Link
-              href="#about"
-              className="transition-colors hover:text-[#0f4c47]"
-            >
-              About Us
-            </Link>
-            <Link
-              href="#process"
-              className="transition-colors hover:text-[#0f4c47]"
-            >
-              How It Works
-            </Link>
-            <Link
-              href="#features"
-              className="transition-colors hover:text-[#0f4c47]"
-            >
-              Features
-            </Link>
-            <Link
-              href="#testimonials"
-              className="transition-colors hover:text-[#0f4c47]"
-            >
-              Stories
-            </Link>
-            <Link
-              href="/dashboard"
-              className="transition-colors hover:text-[#0f4c47]"
-            >
-              Dashboard
-            </Link>
-          </nav>
-
-          {/* Action CTAs */}
-          <div className="flex items-center gap-3">
-            <Button
-              asChild
-              variant="ghost"
-              className="min-h-[44px] text-sm font-semibold"
-            >
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-            <Button
-              asChild
-              className="min-h-[44px] rounded-full bg-[#0f4c47] px-6 text-sm font-semibold text-white shadow-md hover:bg-[#0c3d39] hover:shadow-lg transition-all"
-            >
-              <Link href="/sign-up">
-                Get Started
-                <ArrowRight className="ml-1.5 size-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <HomeNavbar initialLoggedIn={isLoggedIn} />
 
       <main id="main-content" className="flex-1">
         {/* ─── Hero Section ──────────────────────────────────────────────── */}
@@ -146,8 +80,8 @@ export default function Home() {
                     size="lg"
                     className="min-h-[50px] rounded-full bg-[#0f4c47] px-8 text-base font-semibold text-white shadow-lg shadow-teal-900/15 hover:bg-[#0c3d39] hover:shadow-xl transition-all"
                   >
-                    <Link href="/sign-up">
-                      Start a Care Circle
+                    <Link href={isLoggedIn ? "/dashboard" : "/sign-up"}>
+                      {isLoggedIn ? "Go to Dashboard" : "Start a Care Circle"}
                       <ArrowRight className="ml-2 size-5" aria-hidden="true" />
                     </Link>
                   </Button>
