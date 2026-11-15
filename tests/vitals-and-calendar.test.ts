@@ -49,7 +49,9 @@ describe("Calendar and Google Services utilities", () => {
     expect(ics).toContain("BEGIN:VCALENDAR");
     expect(ics).toContain("VERSION:2.0");
     expect(ics).toContain("BEGIN:VEVENT");
-    expect(ics).toContain("SUMMARY:Cardiology Consultation - Dr. Eleanor Vance");
+    expect(ics).toContain(
+      "SUMMARY:Cardiology Consultation - Dr. Eleanor Vance",
+    );
     expect(ics).toContain("LOCATION:City General Hospital, Suite 402");
     expect(ics).toContain("END:VEVENT");
     expect(ics).toContain("END:VCALENDAR");
@@ -73,9 +75,8 @@ describe("Vitals and Healthcare Routine Service", () => {
   });
 
   it("persists and retrieves daily routine vitals idempotently", async () => {
-    const { getDailyRoutine, upsertDailyRoutine } = await import(
-      "../src/lib/vitals-service"
-    );
+    const { getDailyRoutine, upsertDailyRoutine } =
+      await import("../src/lib/vitals-service");
 
     const circleId = "test-circle-vitals";
     const date = "2026-11-15";

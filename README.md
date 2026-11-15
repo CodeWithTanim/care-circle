@@ -1,357 +1,229 @@
+<div align="center">
+
 # Care Circle
 
-[![Live App](https://img.shields.io/badge/Live%20App-care--circle--ochre.vercel.app-0f4c47?style=for-the-badge&logo=vercel)](https://care-circle-ochre.vercel.app/)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16.4.6-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![React 19](https://img.shields.io/badge/React-19.3-61dafb?style=for-the-badge&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-4285f4?style=for-the-badge&logo=google)](https://ai.google.dev/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Native%20Driver-47a248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/)
-[![Tests](https://img.shields.io/badge/Tests-51%20Passed-brightgreen?style=for-the-badge&logo=vitest)](https://vitest.dev/)
+### Everyday care. Closer, together.
 
-An accessible elderly care and medication management platform built for the **PromptWars x Catalyst** hackathon. Care Circle puts the person receiving care at the center of their healthcare decisions — coordinating daily medications, appointments, daily vitals, and care routines with family and caregivers through secure, role-based circles.
+An elderly care and medication management platform that connects care recipients, family members, and caregivers in one shared circle.
 
-Care Circle bridges everyday eldercare with the Google ecosystem: **Google Gemini 2.5 Flash** for plain-language medication explainers, food timing advice, and elder care Q&A; **Google Calendar** for one-click doctor visit synchronization; **Google Maps** for instant clinic navigation; and the **Web Speech API** for calm, elder-friendly voice summaries.
+[![Live demo](https://img.shields.io/badge/Open-Live_Demo-0f766e?style=for-the-badge)](https://care-circle-ochre.vercel.app/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Google Gemini](https://img.shields.io/badge/Google-Gemini-4285f4?style=for-the-badge&logo=google&logoColor=white)](#google-integrations)
 
----
+Built for **PromptWars × Catalyst** using **Google Antigravity**.
 
-## 🌐 Live Application & Quick Tour
+[Try the demo](https://care-circle-ochre.vercel.app/) · [Evaluator walkthrough](#evaluator-walkthrough) · [Features](#features) · [Run locally](#run-locally) · [Verification](#verification)
 
-- **Live URL:** [https://care-circle-ochre.vercel.app/](https://care-circle-ochre.vercel.app/)
-- **Evaluator Quick Start:**
-  1. Open [https://care-circle-ochre.vercel.app/sign-up](https://care-circle-ochre.vercel.app/sign-up) to create an account (or sign in).
-  2. On the dashboard, click the golden **"Evaluator Demo Tour"** button in the top bar.
-  3. Click **"Load Evaluation Scenario"** — in one click, this safely populates:
-     - **Eleanor Vance (Elder):** 78-year-old fictional care recipient with full emergency contact & physician details.
-     - **3 Scheduled Medications:** Lisinopril (10mg), Metformin (500mg), and Vitamin D3 (2000 IU).
-     - **Live Overdue Dose Alert:** A simulated missed morning dose ready to test the _"I'll handle this"_ claiming protocol.
-     - **Doctor's Appointment:** Upcoming Cardiology follow-up with Google Calendar, Google Maps, and printable visit summary.
-     - **Daily Vitals:** Blood pressure (122/82), fasting blood glucose (104 mg/dL), 5 water glasses, and a wellness walk.
-  4. Explore the **"Gemini AI"** tab in the sidebar to ask questions and view medication guidance!
+</div>
 
----
+## The problem
 
-## 🏛️ Google Ecosystem Integrations
+A medication reminder tells someone a dose is due. It often leaves the family with the harder question: has anyone checked in?
 
-| Google Service                         | Location in App                                 | Capability & Impact                                                                                                                            |
-| -------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Google Gemini 2.5 Flash**            | `Gemini AI` tab, Medication cards, `Today` view | Plain-language medication explainer, food & beverage guidelines, senior care Q&A, and spoken voice summaries with zero-crash clinical fallback |
-| **Google Calendar**                    | `Appointments` view (`appointments-view.tsx`)   | 1-Click "Add to Google Calendar" generating pre-filled events with title, provider, clinic location, and prep instructions                     |
-| **Google Maps**                        | `Appointments` view (`appointments-view.tsx`)   | 1-Click "Open in Google Maps" navigation directions directly to doctor clinics and hospitals                                                   |
-| **Google Cloud Run & Cloud Scheduler** | Deployment architecture (`Dockerfile`)          | Containerized serverless deployment with cron-based background reminder dispatch                                                               |
+Care Circle connects the daily schedule with shared responsibility. The care recipient can confirm a dose, authorized caregivers can manage schedules, and family members can see who is following up when a dose remains unconfirmed. Appointments, daily vitals, and care information stay with the same circle.
 
----
+## Evaluator walkthrough
 
-## 📑 Complete Feature Catalog
+**Live application:** [care-circle-ochre.vercel.app](https://care-circle-ochre.vercel.app/)
 
-### 1. 🤖 Google Gemini AI Care Assistant
+1. [Create an account](https://care-circle-ochre.vercel.app/sign-up) or sign in.
+2. Open **Evaluator Demo Tour** in the dashboard header and select **Load Evaluation Scenario**. Onboarding also offers a demo entry point.
+3. Explore Eleanor Vance's clearly labelled fictional care circle. The current seeder creates two medications, a preloaded unconfirmed-dose alert, a cardiology appointment, and daily vitals.
+4. In **Today**, try dose confirmation, a 15-minute snooze, Senior Mode, and schedule read-aloud where the browser supports it.
+5. Claim an alert with **I'll handle this**, then resolve it. Resolving a follow-up does not mark the dose taken.
+6. Open **Appointments** to try the Google Calendar event link, Google Maps location link, calendar export, and printable doctor summary.
+7. Visit **Gemini AI** for care questions or open a medication guide. Responses identify whether they came from Gemini or the local fallback.
+8. To demonstrate collaboration, create an invitation in **Members** and join from a second account in a separate browser session.
 
-- **Dedicated "Gemini AI" Dashboard Tab:** Located right in the main sidebar for instant access by any family member.
-- **Interactive Care Q&A Box:** Ask natural questions in plain English (_"Can Eleanor take Metformin on an empty stomach?"_, _"What should we do if she misses her morning Lisinopril?"_, _"How much water should an elder drink daily?"_).
-- **Quick Question Chips:** Four pre-populated, high-frequency eldercare queries for one-tap answers.
-- **Plain-Language Medication Explainer:**
-  - **Purpose:** 1-2 gentle sentences explaining what the medication does without medical jargon or alarming terms.
-  - **Food & Beverage Guidelines:** Clear rules on meals, hydration, and dietary restrictions (e.g., avoiding grapefruit, taking with meals).
-  - **Daily Routine Tips:** Best timing (morning vs evening), storage safety, and advice for seniors (e.g., rising slowly to prevent lightheadedness).
-- **Elder Voice Read-Aloud:** Integrated Web Speech API synthesizer reading responses at a calm, elderly-friendly pace (0.88x–0.9x speed) with 1-click stop.
-- **Dual-Engine Architecture with Zero-Crash Fallback:**
-  - **Live AI Mode:** Connects to Google's official `gemini-2.5-flash` endpoint when `GEMINI_API_KEY` is present.
-  - **Verified Clinical Knowledgebase Mode:** When tested without an API key or offline, automatically serves pre-verified clinical guidance for major elder medications (Lisinopril, Metformin, Atorvastatin, Amlodipine, Levothyroxine, Omeprazole). The app **never breaks or throws errors**.
-- **Clinical Safety Compliance:** Adheres strictly to `AGENT.MD` guardrails — non-diagnostic, non-prescriptive, never alters doses, and includes clinical disclaimers on every response.
+The demo creates persistent fictional records in the signed-in user's account. It does not require real patient details. Live AI and external email delivery depend on server configuration; the demo does not establish that those services are enabled.
 
-### 2. 👵 Senior Accessibility Mode & Today View
+## Features
 
-- **Elder Mode Toggle:** Prominent toggle on the Today view optimizing the entire interface for seniors:
-  - High-contrast color palette and enlarged typography.
-  - Extra-large touch targets (minimum 44px, up to 56px) for easy touchscreen tapping.
-  - Tactile Web Audio API positive chime upon dose confirmation.
-  - Emergency Check-In Beacon displaying the elder's primary doctor and emergency contact numbers prominently.
-  - **Voice Assistant:** Dedicated "Read Today's Schedule Aloud" button speaking today's scheduled doses and times.
-- **Dose Confirmations:** Big "Mark Taken" button recording the exact actor name, user ID, and UTC timestamp.
-- **Bounded Snooze ("Remind in 15m"):** Snooze up to 3 times (15 minutes each) to allow time to finish eating or drinking while preventing indefinite neglect.
-- **Contextual AI Tips:** Every scheduled dose card features an "AI Food & Care Tips" button for immediate guidance.
+| Area                  | Implemented experience                                                                                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Care circles          | Create and switch circles, record sharing consent, maintain a care profile, and manage members and ownership.                                                          |
+| Passcode invitations  | Generate role-assigned `CARE-XXXX-XXXX` invitations with hashed storage, expiry, use limits, revocation, and care-recipient linking.                                   |
+| Medication management | Add, edit, and archive medicines with dosage text, instructions, start/end dates, and daily schedule times. Preserve historical records.                               |
+| Today and Senior Mode | View daily doses, confirm who took a dose and when, snooze for 15 minutes up to three times, and use larger controls, voice read-aloud, and confirmation sounds.       |
+| Family follow-up      | Show unconfirmed-dose alerts; atomically assign a member through **I'll handle this** and record resolution notes separately from dose history.                        |
+| Adherence             | Review 7-, 14-, or 30-day windows, taken counts, unconfirmed missed doses, percentages, and confirmation actors.                                                       |
+| Appointments          | Create, edit, and cancel visits with provider, location, time, and preparation notes. Open calendar/location links or download an `.ics` file.                         |
+| Vitals and routines   | Log blood pressure, blood glucose with measurement context, daily water intake, and a wellness walk.                                                                   |
+| Doctor summary        | Print a care profile, emergency contacts, active medications, adherence summary, and recent vitals for a visit.                                                        |
+| AI assistant          | Ask care questions, open plain-language medication guides, and listen to responses with supported browser speech synthesis.                                            |
+| Reminders             | Queue upcoming-dose, unconfirmed missed-dose, and appointment emails for opted-in members, with deduplication, atomic claims, bounded retries, and a Resend transport. |
+| Responsive dashboard  | Collapsible desktop navigation, mobile drawer, circle switcher, persistent tab URLs, and labelled loading/empty/error states.                                          |
 
-### 3. 🩺 Daily Healthcare Routines & Vitals Tracker
+An unconfirmed dose is not proof that medication was not taken. Care Circle uses `unconfirmed_missed` after a 60-minute grace period to keep that distinction visible.
 
-- **Blood Pressure Tracker:** Records systolic and diastolic readings along with time of measurement; tags readings as normal or elevated.
-- **Blood Glucose Tracker:** Logs blood sugar in mg/dL with contextual tags (_Fasting_, _Post-Meal_, _Random_) and timestamps.
-- **Hydration Tracker:** Visual daily water intake tracker with interactive `+` and `-` buttons (tracks 0 to 12 glasses).
-- **Daily Wellness Walk Tracker:** Checkbox confirmation and notes for gentle daily physical exercise.
-- **Idempotent Persistence:** Daily records are saved and retrieved idempotently by date and circle ID.
+### Shared access
 
-### 4. 💊 Prescriptions & Medication Management
+| Participant           | Access                                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Owner                 | Manage the circle, invitations, roles, ownership, medication schedules, and appointments.                        |
+| Caregiver             | Manage medications and appointments, confirm doses, and handle follow-up alerts.                                 |
+| Family observer       | View shared care information and acknowledge or resolve follow-up alerts.                                        |
+| Linked care recipient | Confirm their own doses through recipient authorization, including when their membership is otherwise read-only. |
 
-- **Comprehensive Medication CRUD:** Medication name, dosage (e.g., "10mg tablet"), specific instructions, schedule times (e.g., `08:00`, `20:00`), start date, and optional end date.
-- **Deterministic Occurrence Generator:** Automatically creates daily dose occurrences aligned with the circle's local IANA timezone.
-- **Active vs. Archived Views:** Allows discontinuing prescriptions without deleting historical adherence records.
-- **Direct AI Care Guide Trigger:** Every medication card features a dedicated **"Gemini AI Food & Care Guide"** button opening the full clinical modal.
+Server-side membership and role checks protect care resources. Each person signs in through their own Better Auth account; invitation passcodes grant circle access rather than replacing account authentication.
 
-### 5. 🏥 Appointments, Calendar & Printable Doctor Summary
+## Google integrations
 
-- **Healthcare Visit CRUD:** Provider name, appointment title, clinic/hospital address, date, time, and preparation notes.
-- **Google Calendar 1-Click Sync:** Encodes appointment title, clinic location, details, and exact start/end times directly into Google Calendar.
-- **Google Maps 1-Click Navigation:** Direct link opening turn-by-turn directions to the healthcare facility.
-- **RFC 5545 iCalendar (`.ics`) Export:** Downloadable calendar file for Apple Calendar, Outlook, and mobile devices.
-- **Printable Doctor's Visit Summary Sheet (`DoctorSummaryDialog`):**
-  - Formatted specifically for physical printing (`@media print`).
-  - Summarizes elder profile, emergency contacts, active medications with dosages, recent adherence statistics, and latest vitals to hand directly to physicians during clinic visits.
+| Integration             | How this project uses it                                                                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Google Antigravity      | Development environment used to build the project from the implementation handoff.                                                                                                      |
+| Google Gemini 2.5 Flash | Server-side REST requests for care Q&A and structured medication guides when `GEMINI_API_KEY` is configured. A local static fallback is used when the key is absent or a request fails. |
+| Google Calendar         | A prefilled event template link lets the user review and save an appointment in their calendar. This is not account-connected calendar synchronization.                                 |
+| Google Maps             | A location search link opens the appointment's clinic or hospital in Google Maps.                                                                                                       |
+| Google Cloud Run        | Deployment target supported by a multi-stage Dockerfile and Next.js standalone output. Deployment was not verified in the current review.                                               |
+| Google Cloud Scheduler  | Intended caller for `/api/cron/reminders`. Recurring scheduler execution requires separate cloud configuration and verification.                                                        |
 
-### 6. 🚨 Caregiver Follow-Up Protocol ("I'll handle this")
+The Web Speech API and Web Audio API provide browser-native speech and sound. Availability depends on the browser and device.
 
-- **Automated Overdue Alerts:** Generated automatically when a scheduled dose passes the 60-minute grace period without confirmation.
-- **Atomic Concurrency Claiming:** When a family member clicks **"I'll handle this"**, a MongoDB atomic operation assigns responsibility, preventing duplicate family phone calls or double doses.
-- **Transparent Statuses:** Visible across all circle members (`Pending` → `Acknowledged by Sarah` → `Resolved`).
-- **Safe Resolution:** Follow-up resolution notes are recorded to resolve the family alert without falsifying the clinical medication log.
+AI responses and local fallback text are informational prototype features, not clinically validated guidance. They must not replace a prescription or a clinician's advice. AI requests can include the question, recipient name, and medication context; use fictional data for evaluation. See the [project review](docs/PROJECT_REVIEW.md) for the current safety and privacy findings.
 
-### 7. 📈 Honest Adherence History & Analytics
+## Architecture
 
-- **Derived Adherence Logic:** Doses unconfirmed after the grace period are derived as `unconfirmed_missed` (not clinically assumed un-taken).
-- **Filterable Windows:** View adherence trends across the Last 7, 14, or 30 Days.
-- **Adherence Metrics:** Total doses, taken count, unconfirmed missed count, and overall adherence rate percentage.
-- **Chronological Timeline:** Visual audit log of past doses with timestamps and confirmation actors.
-
-### 8. 👥 Elder-Centered Care Circles & Role Barriers
-
-- **Explicit Care Consent:** Circle creation requires an explicit elder consent checkbox and consent notes.
-- **Three Granular Roles:**
-  - **Owner:** Full circle management, invites, member roles, ownership transfer, medication/appointment CRUD.
-  - **Caregiver:** Manages prescriptions, logs doses, schedules doctor visits, claims and resolves alerts.
-  - **Family Observer:** Read-only timeline visibility with active participation in alert follow-ups ("I'll handle this").
-- **Server-Side Enforcement:** Every API route verifies authentication, circle membership, and role permissions at the database level.
-- **Multi-Circle Support:** Switch between multiple care circles via a header dropdown or create/join new ones.
-
-### 9. 🔐 Cryptographic Passcode Invitations
-
-- **Human-Readable Passcodes:** Formatted codes (e.g., `CARE-XXXX-XXXX`) for easy communication over phone or SMS.
-- **SHA-256 Hashing:** Raw passcodes are never stored in the database or written to server logs.
-- **Role Pre-Assignment:**
-  - `Caregiver`
-  - `Family Observer`
-  - **Patient / Care Recipient:** When an elder joins using this passcode, they are automatically linked to `circle.recipientUserId`, granting full dose confirmation and Senior Mode access.
-- **Security Controls:** Configurable expiration (1h, 24h, 48h), max uses (1 vs unlimited), manual revocation, and brute-force lockout after 5 failed attempts.
-
-### 10. ⏰ Proactive Reminders & Background Worker
-
-- **Idempotent Queue:** Generates deduplicated reminder jobs for upcoming doses, missed doses, and appointments.
-- **Pre-Flight Validation:** Rechecks medication state right before dispatching — if the elder has already taken the dose, the reminder is automatically cancelled.
-- **Atomic Worker Leasing:** Prevents duplicate emails when scaling across multiple server instances.
-- **Protected Cron Endpoint:** `/api/cron/reminders` authenticated via Bearer `CRON_SECRET` for Google Cloud Scheduler.
-- **Pluggable Transports:** Supports Resend API in production and an in-memory safe test transport during development.
-
-### 11. 🎨 Modern Shell & Responsive UX
-
-- **Fixed YouTube-Style Header:** Quick logo navigation, active circle switcher, evaluator demo tour button, and user session badge.
-- **Collapsible Left Sidebar:** Mini-sidebar mode (80px icon navigation) for maximum screen real estate on desktop, expanding to full 256px on hover or toggle.
-- **Mobile Drawer:** Smooth responsive slide-out drawer on tablets and phones.
-- **Persistent Tab Navigation:** Dashboard tab state (`today`, `medications`, `appointments`, `members`, `adherence`, `ai`, `settings`) persists across page reloads and browser back/forward buttons via query params and `popstate`.
-- **Split-Screen Authentication:** Modern sign-in and sign-up pages with healthcare branding, user quotes, and password visibility toggles.
-- **Marquee Landing Page:** Homepage featuring an infinite right-to-left scrolling ticker, feature highlights, and conditional authentication routing.
-
----
-
-## 🛠️ Tech Stack
-
-```text
-Frontend Framework:   Next.js 16.4.6 (App Router, Turbopack, React 19)
-Programming Language: TypeScript (Strict Mode, 0 any types)
-Styling & UI:         Tailwind CSS v4, shadcn/ui, Radix UI, Lucide Icons
-AI Engine:            Google Gemini 2.5 Flash API (REST API)
-Authentication:       Better Auth 1.7 + MongoDB Adapter
-Database:             MongoDB (Native Driver 7.9, pooled client)
-Validation:           Zod v4
-Audio & Speech:       Web Speech API (Synthesis) + Web Audio API (Synthesized Chimes)
-Testing:              Vitest 5.1 + MongoMemoryServer (In-Memory Database)
-Containerization:     Docker (Multi-stage node:24-bookworm-slim)
-Hosting:              Vercel / Google Cloud Run
+```mermaid
+flowchart LR
+    User[Care recipient / caregiver / family] --> UI[Next.js dashboard]
+    UI --> API[Route handlers and care services]
+    API --> Auth[Better Auth and circle permissions]
+    API --> DB[(MongoDB)]
+    API --> Gemini[Gemini API / local fallback]
+    UI --> Links[Calendar / Maps / calendar export]
+    Scheduler[External scheduler] --> Cron[Reminder endpoint]
+    Cron --> Queue[MongoDB reminder jobs]
+    Queue --> Email[Resend / memory test transport]
 ```
 
----
+Next.js serves the interface and API from the same application. MongoDB stores care records, memberships, dose occurrences, alerts, and delivery jobs. Unique indexes support membership, occurrence, and reminder deduplication. The reminder endpoint processes work independently of the browser, with remaining scheduling limitations documented in the review.
 
-## 🧪 Automated Testing & Verification
+### Stack
 
-Care Circle includes **9 test suites with 51 unit and integration tests** executing against an isolated in-memory MongoDB server (`MongoMemoryServer`). Tests never touch real or developer databases.
+| Layer               | Technology                                                                     |
+| ------------------- | ------------------------------------------------------------------------------ |
+| Application         | Next.js 16.4.6 App Router, React 19.3, strict TypeScript                       |
+| Interface           | Tailwind CSS v4, shadcn/ui, Radix UI, Lucide                                   |
+| Accounts            | Better Auth 1.7 with MongoDB adapter                                           |
+| Data and validation | MongoDB native driver 7.9, Zod v4                                              |
+| AI and email        | Gemini REST API, Resend REST API                                               |
+| Testing             | Vitest 5.1, MongoMemoryServer                                                  |
+| Delivery            | Multi-stage Docker image, GitHub Actions checks; current public demo on Vercel |
 
-```bash
-npm run lint         # ESLint 9 checks (0 errors, 0 warnings)
-npm run typecheck    # Strict TypeScript type generation & compiler check
-npm test             # Vitest test suite with MongoMemoryServer
-npm run build        # Standalone Next.js production build
-npm run format:check # Prettier code formatting verification
-npm run check        # All four verification suites in sequence
-```
+## Run locally
 
-### Test Suite Breakdown:
-
-| Test File                               | Tests | Coverage Scope                                                                                                    |
-| --------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------- |
-| `tests/gemini-ai.test.ts`               | 5     | Gemini API guide generation, clinical knowledgebase fallback, safe Q&A responses, elder hydration queries         |
-| `tests/vitals-and-calendar.test.ts`     | 4     | Google Calendar URL encoding, Google Maps URL formatting, RFC 5545 iCalendar generation, daily vitals persistence |
-| `tests/care-services.test.ts`           | 10    | Medication CRUD, occurrence generation, dose confirmations, bounded snooze, appointment lifecycle, alert claiming |
-| `tests/circle-service.test.ts`          | 6     | Care circle creation, explicit elder consent, passcode hashing, join flow, ownership transfer                     |
-| `tests/permissions.test.ts`             | 6     | Unique membership indexes, cross-circle access rejection, role restrictions, dose confirmation authorization      |
-| `tests/journey.test.ts`                 | 8     | Complete 8-step end-to-end acceptance journey from circle creation through alert resolution                       |
-| `tests/scheduling-and-delivery.test.ts` | 6     | Timezone midnight boundaries, DST transitions, atomic worker concurrency, retry backoff, cron security            |
-| `tests/auth.test.ts`                    | 5     | Password hashing, short password rejection, invalid credentials, session revocation, untrusted origin defense     |
-| `tests/demo.test.ts`                    | 1     | Complete fictional evaluation scenario seeding (Eleanor Vance profile, meds, alert, appointment, vitals)          |
-
----
-
-## 🚀 Local Setup & Configuration
-
-### Prerequisites
-
-- **Node.js 24 LTS** (`node -v` >= 24.0.0)
-- **npm**
-- **MongoDB** (Local instance, Docker, or MongoDB Atlas)
-
-### Installation
+Requires **Node.js 24 LTS**, npm, and a local MongoDB server or MongoDB Atlas connection. Run commands from the repository root.
 
 ```bash
-# Clone repository
 git clone https://github.com/CodeWithTanim/care-circle.git
 cd care-circle
+npm ci
+```
 
-# Install dependencies
-npm install
+Configure the root `.env` with the variables below. Keep an existing `.env` intact and never commit credentials. To generate a new auth secret for a fresh installation:
 
-# Start local MongoDB (optional if using Atlas)
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+| Variable                      | Purpose                                                                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URI`                 | Required MongoDB connection URI. For local development: `mongodb://127.0.0.1:27017`.                                    |
+| `MONGODB_DB`                  | Database name; defaults to `care_circle`.                                                                               |
+| `BETTER_AUTH_SECRET`          | Required random secret, at least 32 characters.                                                                         |
+| `BETTER_AUTH_URL`             | Required application origin, such as `http://localhost:3000`; use the real HTTPS origin when deployed.                  |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | Optional comma-separated additional trusted origins.                                                                    |
+| `GEMINI_API_KEY`              | Enables live Gemini requests. Without it, the app uses local fallback text.                                             |
+| `CRON_SECRET`                 | Configure before exposing reminder processing. The caller sends it as a Bearer token.                                   |
+| `RESEND_API_KEY`              | Enables external email delivery. Without it, the current implementation uses memory transport, including in production. |
+| `EMAIL_FROM`                  | Sender identity for Resend. Configure a sender accepted by your provider.                                               |
+
+Start a local database if needed, then start the app:
+
+```bash
+# Optional: skip this command when using an existing MongoDB server or Atlas.
 docker compose up -d mongodb
 
-# Run Next.js development server
 npm run dev
 ```
 
-Visit **`http://localhost:3000`** in your browser.
+Open [localhost:3000](http://localhost:3000). Restart the development server after changing environment configuration. Database credentials stay on the server; the Docker build excludes environment files.
 
-### Environment Variables (`.env`)
+## Verification
 
-```env
-# Database
-MONGODB_URI=mongodb://localhost:27017/care_circle
-MONGODB_DB=care_circle
-
-# Authentication (Better Auth)
-BETTER_AUTH_SECRET=your_minimum_32_character_cryptographic_secret
-BETTER_AUTH_URL=http://localhost:3000
-
-# Google Gemini Generative AI (Optional - falls back to knowledgebase if unset)
-GEMINI_API_KEY=your_google_ai_studio_gemini_api_key
-
-# Background Scheduler & Email (Optional for local dev)
-CRON_SECRET=your_scheduler_bearer_secret
-RESEND_API_KEY=re_your_resend_api_key
-EMAIL_FROM=notifications@yourdomain.com
-```
-
----
-
-## ☁️ Google Cloud Run Deployment
-
-Care Circle is pre-configured for containerized deployment on Google Cloud Run.
-
-### 1. Build and Push Docker Image
+The local review on **15 November 2026** passed lint, TypeScript checks, **51 tests across 9 suites**, and the production build. The public homepage returned HTTP 200. These checks do not certify clinical safety or prove that external integrations are configured.
 
 ```bash
-docker build -t gcr.io/[PROJECT-ID]/care-circle:latest .
-docker push gcr.io/[PROJECT-ID]/care-circle:latest
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm run check         # Runs the four checks above in sequence
+npm run format:check  # Separate formatting check
 ```
 
-### 2. Deploy Service to Cloud Run
+Tests use disposable MongoDB instances. The first run may download a MongoDB binary. The service-level journey test is not a browser end-to-end test.
+
+<details>
+<summary>Test suite breakdown</summary>
+
+| Suite                             | Tests | Focus                                                                                      |
+| --------------------------------- | ----: | ------------------------------------------------------------------------------------------ |
+| `auth.test.ts`                    |     5 | Password enforcement, hashed storage, login, session revocation, origin rejection          |
+| `permissions.test.ts`             |     6 | Membership indexes, role checks, cross-circle restrictions, dose authorization             |
+| `circle-service.test.ts`          |     6 | Circle creation, consent, hashed invitations, joining, ownership                           |
+| `care-services.test.ts`           |    10 | Medicines, dose generation and confirmation, snooze, appointments, alert claims            |
+| `journey.test.ts`                 |     8 | Service-level journey from circle creation through follow-up resolution                    |
+| `scheduling-and-delivery.test.ts` |     6 | Time-zone conversions, worker concurrency, bounded failures, configured cron authorization |
+| `gemini-ai.test.ts`               |     5 | Medication and Q&A fallback responses; no live Gemini verification                         |
+| `vitals-and-calendar.test.ts`     |     4 | Calendar/location URLs, `.ics` output, daily vitals persistence                            |
+| `demo.test.ts`                    |     1 | Fictional evaluation dataset                                                               |
+
+</details>
+
+The separate formatting check currently reports an existing issue in `tests/vitals-and-calendar.test.ts`. [Full review findings and verification limits →](docs/PROJECT_REVIEW.md)
+
+## Deployment preparation
+
+The current public demo runs on Vercel. The supplied event deck specifies a working **Cloud Run deployment** for Top 10 eligibility, so the Vercel demo alone does not establish deployment eligibility.
+
+The Dockerfile builds Next.js standalone output, copies static assets, runs as a non-root user, and sets port `8080`. To build locally:
 
 ```bash
-gcloud run deploy care-circle \
-  --image gcr.io/[PROJECT-ID]/care-circle:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars BETTER_AUTH_URL=https://[YOUR-SERVICE-URL],MONGODB_DB=care_circle \
-  --set-secrets MONGODB_URI=MONGODB_URI:latest,BETTER_AUTH_SECRET=BETTER_AUTH_SECRET:latest,CRON_SECRET=CRON_SECRET:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest
+docker build -t care-circle .
 ```
 
-### 3. Cloud Scheduler Cron Setup
+For Cloud Run, publish the image to your registry, configure the service's runtime environment and secrets, set `BETTER_AUTH_URL` to the deployed HTTPS origin, and provide network access to MongoDB. Configure Resend and a recurring authenticated scheduler call to `POST /api/cron/reminders` for real email reminders. Do not include `.env` in the image.
 
-Configure a Google Cloud Scheduler job executing every 15 minutes (`*/15 * * * *`):
+Cloud Run, Cloud Scheduler, container execution, live Gemini responses, and real email delivery were not verified in this documentation review. Before public production use, address the [review findings](docs/PROJECT_REVIEW.md), particularly cron authentication, daily background dose generation, recipient authorization at dispatch, and stalled-job recovery.
 
-- **Target:** `POST https://[YOUR-SERVICE-URL]/api/cron/reminders`
-- **Auth Header:** `Authorization: Bearer [CRON_SECRET]`
-
----
-
-## 🗺️ Project Map
+## Repository guide
 
 ```text
-src/
-├── app/
-│   ├── (auth)/                     Split-screen sign-in and sign-up pages
-│   ├── api/
-│   │   ├── auth/[...all]/          Better Auth authentication endpoints
-│   │   ├── circles/                Care circle CRUD, invites, and join
-│   │   │   └── [circleId]/
-│   │   │       ├── adherence/      Historical adherence query endpoint
-│   │   │       ├── ai/ask/         Interactive Gemini Care Q&A endpoint
-│   │   │       ├── alerts/         Overdue dose alerts & "I'll handle this" claiming
-│   │   │       ├── appointments/   Doctor visits & prep notes
-│   │   │       ├── doses/          Today's dose list, confirmations, snooze
-│   │   │       ├── invites/        Passcode generation and management
-│   │   │       ├── medications/    Prescription CRUD & Gemini AI guides
-│   │   │       ├── members/        Member listing & role management
-│   │   │       ├── preferences/    Notification settings
-│   │   │       └── vitals/         Daily blood pressure, sugar, water, walk
-│   │   ├── cron/reminders/         Cloud Scheduler dispatch endpoint
-│   │   ├── demo/seed/              Evaluator quick demo scenario seeder
-│   │   └── health/                 Health check probe
-│   ├── dashboard/                  Main dashboard server-rendered page
-│   └── page.tsx                    Accessible homepage with infinite marquee
-├── components/
-│   ├── auth/                       Account forms, sign-out button
-│   ├── circle/
-│   │   ├── adherence-view.tsx      Adherence graphs & timeline
-│   │   ├── ai-assistant-view.tsx   Gemini AI interactive assistant tab
-│   │   ├── appointments-view.tsx   Doctor visits, Google Calendar & Maps
-│   │   ├── dashboard-view.tsx      YouTube-style sidebar shell & tour modal
-│   │   ├── doctor-summary-dialog.tsx Printable doctor visit sheet (@media print)
-│   │   ├── medication-ai-dialog.tsx  Gemini medication food & care guide modal
-│   │   ├── medications-view.tsx    Prescription management
-│   │   ├── members-view.tsx        Circle roster & passcode generator
-│   │   ├── onboarding-view.tsx     Circle creation & join wizard
-│   │   ├── settings-view.tsx       Timezone & preference settings
-│   │   └── today-view.tsx          Senior Mode, voice assistant & vitals
-│   ├── home/                       Landing page navigation
-│   └── ui/                         Accessible shadcn/ui components
-└── lib/
-    ├── alert-service.ts            Atomic "I'll handle this" claiming logic
-    ├── appointment-service.ts      Doctor visit scheduling
-    ├── auth.ts & auth-client.ts    Better Auth configuration & client
-    ├── calendar.ts                 Google Calendar, Maps & iCal generators
-    ├── circle-service.ts           Circle management & hashed passcodes
-    ├── db.ts & db-indexes.ts       MongoDB pool & unique index definitions
-    ├── demo-data.ts                Fictional evaluation scenario dataset
-    ├── gemini-ai.ts                Google Gemini 2.5 Flash API & knowledgebase
-    ├── medication-service.ts       Deterministic dose scheduling & adherence
-    ├── models.ts                   Domain TypeScript interfaces
-    ├── permissions.ts              Centralized server-side authorization
-    ├── reminder-service.ts         Idempotent job queue & atomic worker leases
-    ├── tabs.ts                     Type-safe tab definitions
-    ├── timezone.ts                 IANA timezone & DST boundary conversions
-    └── vitals-service.ts           Daily routine & vitals persistence
-tests/                              9 Vitest integration and unit test suites
+src/app/                  Pages, account screens, and API routes
+src/components/circle/    Today, medicines, appointments, members, vitals, AI, settings
+src/components/ui/        Shared shadcn components
+src/lib/                  Care services, permissions, scheduling, calendar, AI, database
+src/lib/email/            Email provider and reminder templates
+tests/                    Nine unit and integration suites
+docs/                     Project review and documentation assets
+assets/                   Original challenge, scoring framework, and event deck
+antigravity/              Implementation brief, task list, and handoff notes
+Dockerfile                Cloud Run container preparation
 ```
 
----
+## Next steps
 
-## 🔮 Future Production Enhancements
+Resolve the review findings and verify the deployed reminder journey first. Further improvements could include multilingual interfaces, push notifications, PDF report export, real-time circle updates, a PWA experience, and opt-in wearable integration. These are roadmap items rather than current features.
 
-1. **Push Notifications (Firebase Cloud Messaging - FCM):** Complement email notifications with instant mobile/browser push alerts for overdue doses.
-2. **Multilingual Support (i18n):** Complete Spanish, Bengali, and Hindi localization for the UI, Gemini AI answers, and voice synthesizer.
-3. **Gemini Vision Pill Identifier:** Photograph a prescription pill with a smartphone to verify color, imprint, and shape against database records before taking.
-4. **Drug Interaction Scanner:** Use Gemini to check an elder's complete medication list for known contraindications and drug-food interactions.
-5. **PDF Clinical Reports:** Export monthly vitals and adherence charts into downloadable PDFs for physicians.
-6. **Progressive Web App (PWA):** Service worker caching for offline access and home screen installation on iOS and Android.
-7. **Real-Time WebSockets / SSE:** Instant multi-user screen updates when a family member takes a dose or claims an alert without manual refresh.
-8. **Wearable Device Integration:** Automatic synchronization of blood pressure and step counts via Google Fit / Health Connect.
+## Hackathon acknowledgements
 
----
+**Hack2skill · MnM · Catalyst · Google Developers**
 
-## 📄 License
+Prepared for the PromptWars × Catalyst hackathon. Original [challenge](assets/challenge.png), [evaluation framework](assets/evaluation_framework.png), and [community deck](assets/OfficialCommunityDeck.pptx) are included for reference. Event names and logos identify their respective organizations.
 
-Built for the **PromptWars x Catalyst** hackathon. All rights reserved.
+## License
+
+All rights reserved. No open-source license file is currently included in this repository.

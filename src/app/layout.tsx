@@ -6,6 +6,15 @@ export const metadata: Metadata = {
   title: { default: "Care Circle", template: "%s | Care Circle" },
   description:
     "Medication routines, appointments, and family care in one shared circle.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
