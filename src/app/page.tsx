@@ -12,7 +12,6 @@ import {
   Lock,
   Pill,
   ShieldCheck,
-  Sparkles,
   Star,
   UserCheck,
 } from "lucide-react";
@@ -23,7 +22,7 @@ import { HomeNavbar } from "@/components/home/home-navbar";
 import { getApiSession } from "@/lib/session";
 
 const TICKER_ITEMS = [
-  "★ Medication Coordination",
+  "Medication Coordination",
   "Compassionate Care",
   "Family Transparency",
   "Passcode Invitations",
@@ -52,8 +51,8 @@ export default async function Home() {
               {/* Left Column: Headlines & CTA */}
               <div className="space-y-6 lg:col-span-7">
                 <div className="inline-flex items-center gap-2 rounded-full border border-teal-200/80 bg-teal-100/60 px-3.5 py-1.5 text-xs font-semibold text-[#0f4c47]">
-                  <Sparkles
-                    className="size-3.5 text-teal-700"
+                  <span
+                    className="size-2 rounded-full bg-[#0f4c47] animate-pulse"
                     aria-hidden="true"
                   />
                   <span>Trusted Elderly Care & Medication Coordination</span>
