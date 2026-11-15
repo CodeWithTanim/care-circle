@@ -156,3 +156,29 @@ export interface ReminderJob {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface DailyRoutine {
+  _id: string;
+  circleId: string;
+  date: string; // "YYYY-MM-DD" in circle timezone
+  bloodPressure?: {
+    systolic: number;
+    diastolic: number;
+    recordedAt?: string;
+  } | null;
+  bloodSugar?: {
+    value: number; // e.g. 105 mg/dL
+    unit?: string;
+    context?: "fasting" | "post_meal" | "random";
+    recordedAt?: string;
+  } | null;
+  waterGlasses?: number; // 0-12
+  wellnessWalkDone?: boolean;
+  notes?: string;
+  recordedBy?: {
+    userId: string;
+    name: string;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
