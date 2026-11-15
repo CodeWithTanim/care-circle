@@ -10,10 +10,12 @@ import {
   CheckCircle2,
   ChevronDown,
   HeartHandshake,
+  LoaderCircle,
   Menu,
   Pill,
   Plus,
   Settings,
+  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -21,12 +23,21 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 import type { Circle, CircleRole, Membership } from "@/lib/models";
 import { isValidTab, type DashboardTab } from "@/lib/tabs";
 import { AdherenceView } from "./adherence-view";
@@ -177,6 +188,37 @@ export function DashboardView({
     router.push(`/dashboard?circle=${id}&tab=${activeTab}`);
   }
 
+  const [isDemoTourOpen, setIsDemoTourOpen] = useState(false);
+  const [seedingDemo, setSeedingDemo] = useState(false);
+
+  async function handleSeedDemoTour() {
+    setSeedingDemo(true);
+    try {
+      const res = await fetch("/api/demo/seed", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to load demo scenario");
+      }
+
+      toast.success("Fictional evaluation demo scenario loaded successfully!");
+      setIsDemoTourOpen(false);
+
+      if (data.circleId) {
+        router.push(`/dashboard?circle=${data.circleId}&tab=today`);
+        router.refresh();
+      } else {
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error loading demo";
+      toast.error(msg);
+    } finally {
+      setSeedingDemo(false);
+    }
+  }
+
   function handleHamburgerClick() {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
       setSidebarOpen((prev) => !prev);
@@ -275,7 +317,23 @@ export function DashboardView({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Evaluator Demo Mode Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDemoTourOpen(true)}
+            className="h-9 px-3 gap-1.5 text-xs font-bold border-amber-300 bg-amber-50 hover:bg-amber-100/90 text-amber-900 rounded-full shadow-2xs transition-colors"
+            title="Load PromptWars x Catalyst Evaluation Demo Scenario"
+          >
+            <Sparkles
+              className="size-3.5 text-amber-600 animate-pulse"
+              aria-hidden="true"
+            />
+            <span className="hidden sm:inline">Evaluator Demo Tour</span>
+            <span className="sm:hidden font-semibold">Demo</span>
+          </Button>
+
           <span className="text-sm text-muted-foreground hidden lg:inline">
             Signed in as <strong>{userName}</strong>
           </span>
@@ -587,6 +645,119 @@ export function DashboardView({
           )}
         </div>
       </main>
+
+      {/* ─── Evaluator Demo Tour Modal ───────────────────────────────────── */}
+      <Dialog open={isDemoTourOpen} onOpenChange={setIsDemoTourOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                <Sparkles className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <DialogTitle className="text-lg font-bold">
+                  PromptWars x Catalyst — Evaluator Tour
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  Instant one-click setup of our complete fictional clinical
+                  evaluation scenario.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-sm text-foreground">
+            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 space-y-2">
+              <p className="font-semibold text-amber-950 text-xs uppercase tracking-wider">
+                What this loads into your Care Circle:
+              </p>
+              <ul className="space-y-2 text-xs text-amber-900">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Eleanor Vance (Elder):</strong> 78-year-old
+                    fictional recipient with complete emergency contacts &amp;
+                    primary physician.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>
+                      3 Scheduled Medications &amp; AI Care Guides:
+                    </strong>{" "}
+                    Lisinopril (10mg), Metformin (500mg), and Vitamin D3 (2000
+                    IU) with Google Gemini food &amp; care explainer.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Live Overdue Dose Simulation:</strong> An overdue
+                    morning dose ready to test the{" "}
+                    <em>&quot;I&apos;ll handle this&quot;</em> claiming protocol
+                    to prevent duplicate outreach.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Doctor Visits with Google Calendar Sync:</strong>{" "}
+                    Upcoming Cardiology follow-up with Google Calendar, Google
+                    Maps, and printable visit summary sheet.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Senior Accessibility Mode &amp; Vitals:</strong>{" "}
+                    High-contrast Senior Mode with voice assistant, daily BP,
+                    blood glucose, and hydration routine.
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Clicking <strong>Load Evaluation Scenario</strong> will populate
+              Eleanor Vance&apos;s records into this circle (safe &amp;
+              idempotent) and switch to the <em>Today</em> view.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDemoTourOpen(false)}
+              disabled={seedingDemo}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSeedDemoTour}
+              disabled={seedingDemo}
+              className="bg-[#0f4c47] hover:bg-[#0c3c38] text-white font-semibold gap-2"
+            >
+              {seedingDemo ? (
+                <>
+                  <LoaderCircle
+                    className="size-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                  Loading Scenario...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="size-4" aria-hidden="true" />
+                  Load Evaluation Scenario
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

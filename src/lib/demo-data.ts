@@ -5,6 +5,7 @@ import type {
   Appointment,
   CareAlert,
   Circle,
+  DailyRoutine,
   DoseOccurrence,
   Medication,
   Membership,
@@ -201,6 +202,35 @@ export async function seedFictionalDemoData(
   };
 
   await db.collection<CareAlert>("care_alerts").insertOne(alert);
+
+  // Fictional today vitals
+  const demoVitals: DailyRoutine = {
+    _id: `routine_${circleId}_${today}`,
+    circleId,
+    date: today,
+    bloodPressure: {
+      systolic: 122,
+      diastolic: 82,
+      recordedAt: "08:15",
+    },
+    bloodSugar: {
+      value: 104,
+      context: "fasting",
+      unit: "mg/dL",
+      recordedAt: "08:00",
+    },
+    waterGlasses: 5,
+    wellnessWalkDone: true,
+    notes: "[DEMO] Eleanor walked 15 minutes in the garden after breakfast.",
+    recordedBy: {
+      userId: ownerUserId,
+      name: ownerName,
+    },
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.collection<DailyRoutine>("daily_routines").insertOne(demoVitals);
 
   return {
     circleId,

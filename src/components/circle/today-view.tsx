@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getGoogleCalendarUrl, getGoogleMapsUrl } from "@/lib/calendar";
+import { MedicationAiDialog } from "@/components/circle/medication-ai-dialog";
 import type {
   Appointment,
   CareAlert,
@@ -103,6 +104,11 @@ export function TodayView({
   // Elder Mode (Senior High-Accessibility & Large Targets)
   const [elderMode, setElderMode] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [selectedAiMed, setSelectedAiMed] = useState<{
+    name: string;
+    dosage?: string;
+    instructions?: string;
+  } | null>(null);
 
   // Resolve alert dialog state
   const [resolvingAlert, setResolvingAlert] = useState<CareAlert | null>(null);
@@ -767,6 +773,27 @@ export function TodayView({
                             ({circle.timezone})
                           </span>
                         </div>
+
+                        {/* Gemini AI Care & Food Guide Trigger */}
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedAiMed({
+                                name: dose.medicationName,
+                                dosage: dose.dosage,
+                                instructions: dose.instructions,
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-teal-200/80 bg-teal-50/70 hover:bg-teal-100/80 px-2 py-0.5 text-xs font-semibold text-[#0f4c47] transition-colors"
+                          >
+                            <Sparkles
+                              className="size-3 text-[#0f4c47]"
+                              aria-hidden="true"
+                            />
+                            <span>AI Food &amp; Care Tips</span>
+                          </button>
+                        </div>
                       </div>
 
                       {/* Actions */}
@@ -1342,6 +1369,14 @@ export function TodayView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Gemini AI Medication Guide Dialog */}
+      <MedicationAiDialog
+        circleId={circle._id}
+        medication={selectedAiMed}
+        isOpen={!!selectedAiMed}
+        onClose={() => setSelectedAiMed(null)}
+      />
     </div>
   );
 }

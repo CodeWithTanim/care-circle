@@ -9,6 +9,7 @@ import {
   Pill,
   Plus,
   Printer,
+  Sparkles,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DoctorSummaryDialog } from "@/components/circle/doctor-summary-dialog";
+import { MedicationAiDialog } from "@/components/circle/medication-ai-dialog";
 import type { Appointment, Circle, Medication } from "@/lib/models";
 import { getTodayLocalDate } from "@/lib/timezone";
 
@@ -40,6 +42,7 @@ export function MedicationsView({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showArchived, setShowArchived] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [selectedAiMed, setSelectedAiMed] = useState<Medication | null>(null);
 
   // Add / Edit Modal state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -328,6 +331,21 @@ export function MedicationsView({
                         </span>
                       </div>
                     </div>
+
+                    {/* Gemini AI Care Guide Trigger */}
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAiMed(med)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-teal-200/80 bg-teal-50/70 hover:bg-teal-100/80 px-2.5 py-1 text-xs font-semibold text-[#0f4c47] transition-colors"
+                      >
+                        <Sparkles
+                          className="size-3.5 text-[#0f4c47]"
+                          aria-hidden="true"
+                        />
+                        <span>Gemini AI Food &amp; Care Guide</span>
+                      </button>
+                    </div>
                   </div>
 
                   {canManage && med.active && (
@@ -528,6 +546,14 @@ export function MedicationsView({
         appointments={appointments}
         isOpen={isSummaryOpen}
         onClose={() => setIsSummaryOpen(false)}
+      />
+
+      {/* Gemini AI Medication Guide Dialog */}
+      <MedicationAiDialog
+        circleId={circle._id}
+        medication={selectedAiMed}
+        isOpen={!!selectedAiMed}
+        onClose={() => setSelectedAiMed(null)}
       />
     </div>
   );
