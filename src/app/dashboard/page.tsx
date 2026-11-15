@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HeartHandshake } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
-import { DashboardView, isValidTab } from "@/components/circle/dashboard-view";
+import { DashboardView } from "@/components/circle/dashboard-view";
 import { OnboardingView } from "@/components/circle/onboarding-view";
 import { getUserCircles } from "@/lib/circle-service";
 import { requireSession } from "@/lib/session";
+import { isValidTab } from "@/lib/tabs";
 
 export const metadata: Metadata = { title: "Dashboard" };
 

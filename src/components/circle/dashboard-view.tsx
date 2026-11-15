@@ -24,29 +24,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Circle, CircleRole, Membership } from "@/lib/models";
+import { isValidTab, type DashboardTab } from "@/lib/tabs";
 import { AdherenceView } from "./adherence-view";
 import { AppointmentsView } from "./appointments-view";
 import { MedicationsView } from "./medications-view";
 import { MembersView } from "./members-view";
 import { TodayView } from "./today-view";
 
-export type DashboardTab =
-  "today" | "medications" | "appointments" | "members" | "adherence";
-
-export const VALID_TABS: readonly DashboardTab[] = [
-  "today",
-  "medications",
-  "appointments",
-  "members",
-  "adherence",
-] as const;
-
-export function isValidTab(tab: unknown): tab is DashboardTab {
-  return (
-    typeof tab === "string" &&
-    (VALID_TABS as readonly string[]).includes(tab as DashboardTab)
-  );
-}
+export type { DashboardTab };
+export { isValidTab };
 
 interface DashboardViewProps {
   initialCircles: Array<{

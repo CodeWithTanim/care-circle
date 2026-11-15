@@ -1,0 +1,17 @@
+export type DashboardTab =
+  "today" | "medications" | "appointments" | "members" | "adherence";
+
+export const VALID_TABS: readonly DashboardTab[] = [
+  "today",
+  "medications",
+  "appointments",
+  "members",
+  "adherence",
+] as const;
+
+export function isValidTab(tab: unknown): tab is DashboardTab {
+  return (
+    typeof tab === "string" &&
+    (VALID_TABS as readonly string[]).includes(tab as DashboardTab)
+  );
+}
