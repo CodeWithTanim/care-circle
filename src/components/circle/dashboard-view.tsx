@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -30,6 +30,24 @@ import { MedicationsView } from "./medications-view";
 import { MembersView } from "./members-view";
 import { TodayView } from "./today-view";
 
+export type DashboardTab =
+  "today" | "medications" | "appointments" | "members" | "adherence";
+
+export const VALID_TABS: readonly DashboardTab[] = [
+  "today",
+  "medications",
+  "appointments",
+  "members",
+  "adherence",
+] as const;
+
+export function isValidTab(tab: unknown): tab is DashboardTab {
+  return (
+    typeof tab === "string" &&
+    (VALID_TABS as readonly string[]).includes(tab as DashboardTab)
+  );
+}
+
 interface DashboardViewProps {
   initialCircles: Array<{
     circle: Circle;
@@ -37,6 +55,7 @@ interface DashboardViewProps {
     memberCount: number;
   }>;
   currentCircleId: string;
+  initialTab?: DashboardTab;
   userName: string;
   userId: string;
 }
@@ -44,14 +63,42 @@ interface DashboardViewProps {
 export function DashboardView({
   initialCircles,
   currentCircleId,
+  initialTab,
   userName,
   userId,
 }: DashboardViewProps) {
   const router = useRouter();
   const [activeCircleId, setActiveCircleId] = useState(currentCircleId);
-  const [activeTab, setActiveTab] = useState<
-    "today" | "medications" | "appointments" | "members" | "adherence"
-  >("today");
+  const [activeTab, setActiveTab] = useState<DashboardTab>(
+    initialTab ?? "today",
+  );
+
+  // Sync active tab with browser address bar without a full page reload
+  function switchTab(tab: DashboardTab) {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      params.set("tab", tab);
+      if (activeCircleId) {
+        params.set("circle", activeCircleId);
+      }
+      const newUrl = `/dashboard?${params.toString()}`;
+      window.history.replaceState(null, "", newUrl);
+    }
+  }
+
+  // Handle browser back and forward button clicks
+  useEffect(() => {
+    function onPopState() {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (isValidTab(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const currentItem =
     initialCircles.find((c) => c.circle._id === activeCircleId) ??
@@ -85,7 +132,7 @@ export function DashboardView({
 
   function switchCircle(id: string) {
     setActiveCircleId(id);
-    router.push(`/dashboard?circle=${id}`);
+    router.push(`/dashboard?circle=${id}&tab=${activeTab}`);
   }
 
   return (
@@ -169,7 +216,7 @@ export function DashboardView({
         <div className="flex overflow-x-auto border-b border-border/80 pb-px gap-1 sm:gap-2">
           <Button
             variant={activeTab === "today" ? "default" : "ghost"}
-            onClick={() => setActiveTab("today")}
+            onClick={() => switchTab("today")}
             className={`min-h-[44px] px-4 sm:px-5 text-base font-semibold rounded-t-lg rounded-b-none border-b-2 gap-2 transition-all ${
               activeTab === "today"
                 ? "border-primary"
@@ -182,7 +229,7 @@ export function DashboardView({
 
           <Button
             variant={activeTab === "medications" ? "default" : "ghost"}
-            onClick={() => setActiveTab("medications")}
+            onClick={() => switchTab("medications")}
             className={`min-h-[44px] px-4 sm:px-5 text-base font-semibold rounded-t-lg rounded-b-none border-b-2 gap-2 transition-all ${
               activeTab === "medications"
                 ? "border-primary"
@@ -195,7 +242,7 @@ export function DashboardView({
 
           <Button
             variant={activeTab === "appointments" ? "default" : "ghost"}
-            onClick={() => setActiveTab("appointments")}
+            onClick={() => switchTab("appointments")}
             className={`min-h-[44px] px-4 sm:px-5 text-base font-semibold rounded-t-lg rounded-b-none border-b-2 gap-2 transition-all ${
               activeTab === "appointments"
                 ? "border-primary"
@@ -208,7 +255,7 @@ export function DashboardView({
 
           <Button
             variant={activeTab === "members" ? "default" : "ghost"}
-            onClick={() => setActiveTab("members")}
+            onClick={() => switchTab("members")}
             className={`min-h-[44px] px-4 sm:px-5 text-base font-semibold rounded-t-lg rounded-b-none border-b-2 gap-2 transition-all ${
               activeTab === "members"
                 ? "border-primary"
@@ -221,7 +268,7 @@ export function DashboardView({
 
           <Button
             variant={activeTab === "adherence" ? "default" : "ghost"}
-            onClick={() => setActiveTab("adherence")}
+            onClick={() => switchTab("adherence")}
             className={`min-h-[44px] px-4 sm:px-5 text-base font-semibold rounded-t-lg rounded-b-none border-b-2 gap-2 transition-all ${
               activeTab === "adherence"
                 ? "border-primary"
@@ -240,16 +287,9 @@ export function DashboardView({
           <TodayView
             circle={currentCircle}
             canConfirm={canConfirm}
-            onNavigateToTab={(tab) =>
-              setActiveTab(
-                tab as
-                  | "today"
-                  | "medications"
-                  | "appointments"
-                  | "members"
-                  | "adherence",
-              )
-            }
+            onNavigateToTab={(tab) => {
+              if (isValidTab(tab)) switchTab(tab);
+            }}
           />
         )}
 

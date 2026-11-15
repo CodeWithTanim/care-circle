@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HeartHandshake } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
-import { DashboardView } from "@/components/circle/dashboard-view";
+import { DashboardView, isValidTab } from "@/components/circle/dashboard-view";
 import { OnboardingView } from "@/components/circle/onboarding-view";
 import { getUserCircles } from "@/lib/circle-service";
 import { requireSession } from "@/lib/session";
@@ -18,6 +18,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const search = await searchParams;
   const requestedCircleId =
     typeof search.circle === "string" ? search.circle : undefined;
+  const requestedTab =
+    typeof search.tab === "string" && isValidTab(search.tab)
+      ? search.tab
+      : undefined;
   const showOnboarding = search.onboarding === "true";
 
   const circles = await getUserCircles(user.id);
@@ -66,6 +70,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     <DashboardView
       initialCircles={circles}
       currentCircleId={targetCircleId}
+      initialTab={requestedTab}
       userName={user.name}
       userId={user.id}
     />
