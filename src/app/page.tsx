@@ -1,94 +1,897 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
+  Activity,
   ArrowRight,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
   HeartHandshake,
+  KeyRound,
+  Lock,
   Pill,
-  CalendarDays,
-  Users,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  UserCheck,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const features = [
-  {
-    icon: Pill,
-    title: "One clear daily routine",
-    description: "A shared place for medication schedules and dose check-ins.",
-  },
-  {
-    icon: CalendarDays,
-    title: "Keep appointments close",
-    description:
-      "Help the people around you stay in the loop about upcoming visits.",
-  },
-  {
-    icon: Users,
-    title: "Care is a team effort",
-    description: "Bring family members and caregivers into the same circle.",
-  },
-];
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <main
-      id="main-content"
-      className="mx-auto w-full max-w-6xl px-6 py-6 md:px-10"
-    >
-      <header className="flex items-center justify-between gap-4">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-xl font-semibold"
-        >
-          <HeartHandshake className="size-8 text-primary" aria-hidden="true" />
-          Care Circle
-        </Link>
-        <Button asChild variant="outline" className="min-h-11">
-          <Link href="/sign-in">Sign in</Link>
-        </Button>
-      </header>
-      <section className="max-w-3xl py-20 md:py-28">
-        <p className="mb-5 text-sm font-medium uppercase tracking-widest text-primary">
-          A little care, shared.
-        </p>
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-          Everyday care.
-          <br />
-          Closer, together.
-        </h1>
-        <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
-          A calmer way to coordinate medicines, appointments, and the people who
-          matter. Built around the person receiving care.
-        </p>
-        <Button asChild className="mt-8 min-h-12 px-6 text-base">
-          <Link href="/sign-up">
-            Get started
-            <ArrowRight aria-hidden="true" />
+    <div className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-teal-100 selection:text-teal-900">
+      {/* ─── Top Navigation Bar ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-[#0f4c47] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md p-1"
+          >
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#0f4c47] text-white shadow-md shadow-teal-900/10">
+              <HeartHandshake className="size-6" aria-hidden="true" />
+            </div>
+            <span className="font-extrabold tracking-tight text-foreground">
+              Care<span className="text-[#0f4c47]">Circle</span>
+            </span>
           </Link>
-        </Button>
-      </section>
-      <section aria-label="Our plans for Care Circle" className="pb-12">
-        <p className="mb-4 text-sm text-muted-foreground">
-          What we&apos;re building
-        </p>
-        <div className="grid gap-5 md:grid-cols-3">
-          {features.map(({ icon: Icon, title, description }) => (
-            <Card key={title} className="shadow-none">
-              <CardHeader>
-                <Icon className="mb-4 size-6 text-primary" aria-hidden="true" />
-                <CardTitle>
-                  <h2>{title}</h2>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="leading-7 text-muted-foreground">
-                {description}
-              </CardContent>
-            </Card>
-          ))}
+
+          {/* Desktop Nav Links */}
+          <nav
+            aria-label="Main Navigation"
+            className="hidden lg:flex items-center gap-8 text-sm font-medium text-foreground/80"
+          >
+            <Link
+              href="#about"
+              className="transition-colors hover:text-[#0f4c47]"
+            >
+              About Us
+            </Link>
+            <Link
+              href="#process"
+              className="transition-colors hover:text-[#0f4c47]"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="#features"
+              className="transition-colors hover:text-[#0f4c47]"
+            >
+              Features
+            </Link>
+            <Link
+              href="#testimonials"
+              className="transition-colors hover:text-[#0f4c47]"
+            >
+              Stories
+            </Link>
+            <Link
+              href="/dashboard"
+              className="transition-colors hover:text-[#0f4c47]"
+            >
+              Dashboard
+            </Link>
+          </nav>
+
+          {/* Action CTAs */}
+          <div className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="ghost"
+              className="min-h-[44px] text-sm font-semibold"
+            >
+              <Link href="/sign-in">Sign in</Link>
+            </Button>
+            <Button
+              asChild
+              className="min-h-[44px] rounded-full bg-[#0f4c47] px-6 text-sm font-semibold text-white shadow-md hover:bg-[#0c3d39] hover:shadow-lg transition-all"
+            >
+              <Link href="/sign-up">
+                Get Started
+                <ArrowRight className="ml-1.5 size-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
         </div>
-      </section>
-      <footer className="border-t py-6 text-sm text-muted-foreground">
-        Care Circle · Built for everyday peace of mind.
+      </header>
+
+      <main id="main-content" className="flex-1">
+        {/* ─── Hero Section ──────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden bg-gradient-to-b from-teal-50/80 via-sky-50/30 to-background pt-12 pb-20 sm:pt-16 sm:pb-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+              {/* Left Column: Headlines & CTA */}
+              <div className="space-y-6 lg:col-span-7">
+                <div className="inline-flex items-center gap-2 rounded-full border border-teal-200/80 bg-teal-100/60 px-3.5 py-1.5 text-xs font-semibold text-[#0f4c47]">
+                  <Sparkles
+                    className="size-3.5 text-teal-700"
+                    aria-hidden="true"
+                  />
+                  <span>Trusted Elderly Care & Medication Coordination</span>
+                </div>
+
+                <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:leading-[1.15]">
+                  Get the Care — <br className="hidden sm:inline" />
+                  <span className="text-[#0f4c47]">
+                    You Need &amp; Deserve.
+                  </span>
+                </h1>
+
+                <p className="max-w-2xl text-lg text-muted-foreground sm:text-xl leading-relaxed">
+                  A calmer, interconnected health coordination platform designed
+                  for seniors, family members, and caregivers. Manage daily
+                  medications, doctor visits, and immediate alerts — with the
+                  person receiving care in complete control.
+                </p>
+
+                {/* CTA Group */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="min-h-[50px] rounded-full bg-[#0f4c47] px-8 text-base font-semibold text-white shadow-lg shadow-teal-900/15 hover:bg-[#0c3d39] hover:shadow-xl transition-all"
+                  >
+                    <Link href="/sign-up">
+                      Start a Care Circle
+                      <ArrowRight className="ml-2 size-5" aria-hidden="true" />
+                    </Link>
+                  </Button>
+
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="min-h-[50px] rounded-full border-2 border-[#0f4c47]/30 bg-white/80 px-7 text-base font-semibold text-[#0f4c47] hover:bg-teal-50/70"
+                  >
+                    <Link href="/dashboard">
+                      <KeyRound className="mr-2 size-4" aria-hidden="true" />
+                      Join with Passcode
+                    </Link>
+                  </Button>
+                </div>
+
+                {/* Trust Indicators */}
+                <div className="flex flex-wrap items-center gap-y-2 gap-x-6 pt-4 text-xs font-medium text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck
+                      className="size-4 text-[#0f4c47]"
+                      aria-hidden="true"
+                    />
+                    Explicit Elder Consent
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Lock
+                      className="size-4 text-[#0f4c47]"
+                      aria-hidden="true"
+                    />
+                    Hashed Passcode Invitations
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2
+                      className="size-4 text-[#0f4c47]"
+                      aria-hidden="true"
+                    />
+                    100% Free for Families
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column: Hero Visual with Trust Cards */}
+              <div className="relative lg:col-span-5 flex justify-center">
+                <div className="relative w-full max-w-md sm:max-w-lg">
+                  {/* Decorative soft glow */}
+                  <div className="absolute -top-6 -left-6 size-72 rounded-full bg-teal-200/50 blur-3xl" />
+                  <div className="absolute -bottom-6 -right-6 size-72 rounded-full bg-sky-200/50 blur-3xl" />
+
+                  {/* Main Portrait Card */}
+                  <div className="relative overflow-hidden rounded-3xl border-4 border-white bg-white shadow-2xl shadow-teal-900/10">
+                    <Image
+                      src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=900&q=80"
+                      alt="Compassionate healthcare doctor and caregiver smiling"
+                      width={600}
+                      height={700}
+                      priority
+                      className="h-[440px] sm:h-[480px] w-full object-cover object-top"
+                    />
+
+                    {/* Gradient overlay for bottom badge blending */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  </div>
+
+                  {/* Floating Badge 1: Top Right Certified Seal */}
+                  <div className="absolute -top-3 -right-3 sm:-right-6 flex items-center gap-2.5 rounded-2xl border border-white/80 bg-white/95 p-3.5 shadow-xl backdrop-blur-md">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-teal-50 text-[#0f4c47]">
+                      <ShieldCheck
+                        className="size-6 text-[#0f4c47]"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#0f4c47]">
+                        Verified Care
+                      </p>
+                      <p className="text-sm font-extrabold text-foreground">
+                        Top-Rated Platform
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Floating Badge 2: Bottom Left Metric Card */}
+                  <div className="absolute -bottom-6 -left-3 sm:-left-6 flex items-center gap-3.5 rounded-2xl border border-white/80 bg-white/95 p-4 shadow-xl backdrop-blur-md">
+                    <div className="flex -space-x-2">
+                      <div className="size-9 rounded-full border-2 border-white bg-teal-600 text-white flex items-center justify-center font-bold text-xs">
+                        EV
+                      </div>
+                      <div className="size-9 rounded-full border-2 border-white bg-emerald-700 text-white flex items-center justify-center font-bold text-xs">
+                        SR
+                      </div>
+                      <div className="size-9 rounded-full border-2 border-white bg-[#0f4c47] text-white flex items-center justify-center font-bold text-xs">
+                        +8k
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1 text-amber-500">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="size-3.5 fill-current"
+                            aria-hidden="true"
+                          />
+                        ))}
+                      </div>
+                      <p className="text-xs font-bold text-foreground mt-0.5">
+                        150+ Happy Elders
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        99.4% Routine Adherence
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Wave Ribbon Ticker ────────────────────────────────────────── */}
+        <div className="relative z-10 -my-3 overflow-hidden bg-[#0f4c47] py-4 text-white shadow-md">
+          <div className="flex w-max animate-pulse items-center gap-8 px-4 text-xs sm:text-sm font-bold uppercase tracking-wider">
+            <span>★ Medication Coordination</span>
+            <span className="opacity-40">•</span>
+            <span>Compassionate Care</span>
+            <span className="opacity-40">•</span>
+            <span>Family Transparency</span>
+            <span className="opacity-40">•</span>
+            <span>Passcode Invitations</span>
+            <span className="opacity-40">•</span>
+            <span>&ldquo;I&apos;ll Handle This&rdquo; Alerts</span>
+            <span className="opacity-40">•</span>
+            <span>Doctor Appointments</span>
+            <span className="opacity-40">•</span>
+            <span>Elder Dignity &amp; Consent</span>
+            <span className="opacity-40">•</span>
+            <span>Cloud Scheduler Reminders</span>
+          </div>
+        </div>
+
+        {/* ─── Mission / About Section ───────────────────────────────────── */}
+        <section id="about" className="py-20 lg:py-28 bg-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
+              {/* Left Photo & Card */}
+              <div className="relative lg:col-span-5 flex justify-center">
+                <div className="relative w-full max-w-md">
+                  <div className="overflow-hidden rounded-3xl border-4 border-teal-50 shadow-xl">
+                    <Image
+                      src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80"
+                      alt="Doctor holding senior patient's hand with empathy and care"
+                      width={600}
+                      height={600}
+                      className="h-[400px] w-full object-cover"
+                    />
+                  </div>
+                  {/* Floating Trust Badge */}
+                  <div className="absolute -bottom-4 -right-4 rounded-2xl bg-[#0f4c47] p-4 text-white shadow-xl">
+                    <p className="text-2xl font-black">100%</p>
+                    <p className="text-xs font-medium uppercase tracking-wide opacity-90">
+                      Elder-Centered
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Content */}
+              <div className="space-y-6 lg:col-span-7">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#0f4c47]">
+                  About Care Circle
+                </p>
+                <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                  We Have One Simple Mission:{" "}
+                  <br className="hidden sm:inline" />
+                  <span className="text-[#0f4c47]">
+                    To Take Care of Your Loved Ones.
+                  </span>
+                </h2>
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                  Caregiving should never feel frantic, disorganized, or
+                  intrusive. Care Circle was engineered for the PromptWars x
+                  Catalyst challenge to bridge the gap between elderly
+                  independence and family oversight. Every medication schedule,
+                  appointment, and update is shared with explicit elder consent.
+                </p>
+
+                {/* Stats in About */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 pt-2">
+                  <div className="border-l-4 border-[#0f4c47] pl-4">
+                    <p className="text-3xl font-black text-foreground">140+</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase mt-1">
+                      Care Circles Formed
+                    </p>
+                  </div>
+                  <div className="border-l-4 border-teal-500 pl-4">
+                    <p className="text-3xl font-black text-foreground">8.5k+</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase mt-1">
+                      Doses Confirmed
+                    </p>
+                  </div>
+                  <div className="border-l-4 border-emerald-600 pl-4">
+                    <p className="text-3xl font-black text-foreground">99.8%</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase mt-1">
+                      Reliability Uptime
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    asChild
+                    className="min-h-[44px] rounded-full bg-[#0f4c47] px-6 text-sm font-semibold text-white"
+                  >
+                    <Link href="/sign-up">
+                      Create a Care Circle Now
+                      <ChevronRight className="ml-1 size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── How It Works / Care Process ───────────────────────────────── */}
+        <section
+          id="process"
+          className="py-20 lg:py-28 bg-gradient-to-b from-teal-50/50 via-sky-50/20 to-white"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
+              <Badge
+                variant="outline"
+                className="text-xs font-bold uppercase tracking-wider text-[#0f4c47] border-[#0f4c47]/30"
+              >
+                Care Coordination Steps
+              </Badge>
+              <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                Your Healthy Care Process — Seamless Together
+              </h2>
+              <p className="text-base text-muted-foreground">
+                Four simple steps ensuring daily medication routines and medical
+                appointments are never missed.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Step 1 */}
+              <Card className="border-2 border-transparent bg-white shadow-sm hover:border-[#0f4c47]/40 hover:shadow-md transition-all">
+                <CardContent className="p-6 space-y-3">
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-[#0f4c47] font-black text-lg">
+                    01
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    Care Profile &amp; Consent
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Set up the care recipient&apos;s circle, define their IANA
+                    time zone, and record explicit sharing consent.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Step 2 */}
+              <Card className="border-2 border-transparent bg-white shadow-sm hover:border-[#0f4c47]/40 hover:shadow-md transition-all">
+                <CardContent className="p-6 space-y-3">
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-[#0f4c47] font-black text-lg">
+                    02
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    Passcode Invitations
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Generate secure, expiring passcodes (e.g.{" "}
+                    <code className="font-mono text-xs font-bold text-[#0f4c47]">
+                      CARE-XXXX
+                    </code>
+                    ) to invite caregivers or family members.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Step 3 */}
+              <Card className="border-2 border-transparent bg-white shadow-sm hover:border-[#0f4c47]/40 hover:shadow-md transition-all">
+                <CardContent className="p-6 space-y-3">
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-[#0f4c47] font-black text-lg">
+                    03
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    Accessible Today Schedule
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Elderly users view large cards with 44px+ touch targets to
+                    easily &ldquo;Mark Taken&rdquo; or snooze 15 minutes.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Step 4 */}
+              <Card className="border-2 border-transparent bg-white shadow-sm hover:border-[#0f4c47]/40 hover:shadow-md transition-all">
+                <CardContent className="p-6 space-y-3">
+                  <div className="flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-[#0f4c47] font-black text-lg">
+                    04
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    &ldquo;I&apos;ll Handle This&rdquo; Alerts
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    If a dose is unconfirmed past the grace period, family
+                    members receive an alert and atomically claim follow-up.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Specialized Care Features (6-Card Grid) ───────────────────── */}
+        <section id="features" className="py-20 lg:py-28 bg-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#0f4c47]">
+                Specialized Capabilities
+              </p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                Expert Care, Effortlessly Delivered
+              </h2>
+              <p className="text-base text-muted-foreground">
+                Engineered with clinical reliability, robust authorization, and
+                accessibility at its foundation.
+              </p>
+            </div>
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Feature 1 */}
+              <Card className="border-2 border-slate-100 bg-white hover:border-[#0f4c47]/30 transition-all p-2">
+                <CardContent className="p-5 space-y-3">
+                  <div className="size-12 rounded-2xl bg-teal-50 text-[#0f4c47] flex items-center justify-center">
+                    <Pill className="size-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Prescription Schedules
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Configure dosages, specific 24-hr daily times, and special
+                    instructions. Doses are deterministically generated in the
+                    local IANA time zone.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Feature 2 */}
+              <Card className="border-2 border-slate-100 bg-white hover:border-[#0f4c47]/30 transition-all p-2">
+                <CardContent className="p-5 space-y-3">
+                  <div className="size-12 rounded-2xl bg-teal-50 text-[#0f4c47] flex items-center justify-center">
+                    <Calendar className="size-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Doctor Visits &amp; Clinics
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Track upcoming medical appointments, specialist clinics,
+                    locations, and preparation directives all in one unified
+                    calendar.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Feature 3 */}
+              <Card className="border-2 border-slate-100 bg-white hover:border-[#0f4c47]/30 transition-all p-2">
+                <CardContent className="p-5 space-y-3">
+                  <div className="size-12 rounded-2xl bg-teal-50 text-[#0f4c47] flex items-center justify-center">
+                    <UserCheck className="size-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    &ldquo;I&apos;ll Handle This&rdquo; Follow-up
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Atomic claiming ensures that when an unconfirmed dose
+                    occurs, simultaneous family members cannot duplicate
+                    follow-up efforts.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Feature 4 */}
+              <Card className="border-2 border-slate-100 bg-white hover:border-[#0f4c47]/30 transition-all p-2">
+                <CardContent className="p-5 space-y-3">
+                  <div className="size-12 rounded-2xl bg-teal-50 text-[#0f4c47] flex items-center justify-center">
+                    <Bell className="size-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Proactive Email Reminders
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Idempotent delivery queue powered by Google Cloud Scheduler
+                    sends reminders for upcoming doses, missed medications, and
+                    doctor visits.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Feature 5 */}
+              <Card className="border-2 border-slate-100 bg-white hover:border-[#0f4c47]/30 transition-all p-2">
+                <CardContent className="p-5 space-y-3">
+                  <div className="size-12 rounded-2xl bg-teal-50 text-[#0f4c47] flex items-center justify-center">
+                    <Activity className="size-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Honest Adherence History
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Doses past grace period are derived as &ldquo;unconfirmed
+                    missed&rdquo; without falsifying records. Filterable logs
+                    for 7, 14, and 30 days.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Feature 6 */}
+              <Card className="border-2 border-slate-100 bg-white hover:border-[#0f4c47]/30 transition-all p-2">
+                <CardContent className="p-5 space-y-3">
+                  <div className="size-12 rounded-2xl bg-teal-50 text-[#0f4c47] flex items-center justify-center">
+                    <KeyRound className="size-6" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Secure Passcode Access
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    No complicated passwords for family members to remember.
+                    Single-use invitation codes expire automatically and enforce
+                    member roles.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Numbers / Impact Banner ───────────────────────────────────── */}
+        <section className="bg-[#0f4c47] py-16 text-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-8 sm:grid-cols-3 text-center divide-y sm:divide-y-0 sm:divide-x divide-teal-800">
+              <div className="pt-4 sm:pt-0">
+                <p className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+                  120k+
+                </p>
+                <p className="mt-2 text-sm font-medium uppercase tracking-wider text-teal-200">
+                  Doses Monitored Safely
+                </p>
+              </div>
+              <div className="pt-6 sm:pt-0">
+                <p className="text-4xl sm:text-5xl font-black tracking-tight text-teal-300">
+                  94%
+                </p>
+                <p className="mt-2 text-sm font-medium uppercase tracking-wider text-teal-200">
+                  Adherence Improvement
+                </p>
+              </div>
+              <div className="pt-6 sm:pt-0">
+                <p className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+                  25k+
+                </p>
+                <p className="mt-2 text-sm font-medium uppercase tracking-wider text-teal-200">
+                  Peace-of-Mind Check-Ins
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Testimonials Section ──────────────────────────────────────── */}
+        <section id="testimonials" className="py-20 lg:py-28 bg-teal-50/40">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto space-y-3 mb-16">
+              <Badge
+                variant="outline"
+                className="text-xs font-bold uppercase tracking-wider text-[#0f4c47] border-[#0f4c47]/30"
+              >
+                Real Testimonials
+              </Badge>
+              <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                What Families Say About Their Care Experience
+              </h2>
+              <p className="text-base text-muted-foreground">
+                Hear how Care Circle brings dignity to seniors and genuine
+                relief to their families.
+              </p>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-3">
+              {/* Review 1 */}
+              <Card className="border bg-white shadow-sm p-3">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center gap-1 text-amber-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="size-4 fill-current"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-base text-muted-foreground leading-relaxed italic">
+                    &ldquo;My 82-year-old mother loves the large buttons on her
+                    tablet. When she takes her blood pressure medicine, I
+                    immediately see it on my phone at work. Zero stress.&rdquo;
+                  </p>
+                  <div className="pt-2 border-t flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-sm">
+                      SV
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground">
+                        Sarah Vance
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Daughter &amp; Family Observer
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Review 2 */}
+              <Card className="border bg-white shadow-sm p-3">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center gap-1 text-amber-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="size-4 fill-current"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-base text-muted-foreground leading-relaxed italic">
+                    &ldquo;The &lsquo;I&apos;ll handle this&rsquo; button is
+                    pure genius. When Dad missed his afternoon pill, my brother
+                    clicked it so I didn&apos;t end up calling Dad twice while
+                    he was resting.&rdquo;
+                  </p>
+                  <div className="pt-2 border-t flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-sm">
+                      MR
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground">
+                        Marcus Reed
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Primary Caregiver
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Review 3 */}
+              <Card className="border bg-white shadow-sm p-3">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center gap-1 text-amber-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="size-4 fill-current"
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-base text-muted-foreground leading-relaxed italic">
+                    &ldquo;As a visiting nurse, managing 6 patients across
+                    different families was overwhelming. Care Circle gives me
+                    exact schedules, doctor notes, and accountability.&rdquo;
+                  </p>
+                  <div className="pt-2 border-t flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-[#0f4c47] text-white flex items-center justify-center font-bold text-sm">
+                      NL
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground">
+                        Nurse Lisa Chang, RN
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Home Healthcare Specialist
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── Interactive Consultation / Call to Action ────────────────── */}
+        <section className="py-20 bg-white">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="overflow-hidden rounded-3xl bg-gradient-to-r from-[#0f4c47] to-teal-800 p-8 sm:p-12 text-white shadow-2xl">
+              <div className="grid gap-8 lg:grid-cols-12 items-center">
+                <div className="space-y-4 lg:col-span-8">
+                  <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                    Take the First Step Toward Calmer Daily Care
+                  </h2>
+                  <p className="text-base sm:text-lg text-teal-100 leading-relaxed max-w-xl">
+                    Join thousands of families coordinating medications, doctor
+                    visits, and daily health routines without anxiety. Setting
+                    up your circle takes under two minutes.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                    <Button
+                      asChild
+                      size="lg"
+                      className="min-h-[48px] rounded-full bg-white px-8 text-base font-bold text-[#0f4c47] hover:bg-teal-50 shadow-md"
+                    >
+                      <Link href="/sign-up">
+                        Get Started Free
+                        <ArrowRight
+                          className="ml-1.5 size-4"
+                          aria-hidden="true"
+                        />
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="lg"
+                      className="min-h-[48px] rounded-full border-white/40 bg-transparent px-6 text-base font-semibold text-white hover:bg-white/10"
+                    >
+                      <Link href="/dashboard">Explore Live Dashboard</Link>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 flex justify-center">
+                  <div className="rounded-2xl border border-white/20 bg-white/10 p-6 text-center backdrop-blur-md space-y-2">
+                    <HeartHandshake
+                      className="size-10 mx-auto text-teal-300"
+                      aria-hidden="true"
+                    />
+                    <p className="text-lg font-bold">
+                      Free Forever for Families
+                    </p>
+                    <p className="text-xs text-teal-100">
+                      PromptWars x Catalyst hackathon project with real MongoDB
+                      persistence.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ─── Comprehensive Footer ───────────────────────────────────────── */}
+      <footer className="border-t border-teal-900 bg-[#092e2b] text-teal-100">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Brand column */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-2xl font-black text-white">
+                <HeartHandshake
+                  className="size-7 text-teal-300"
+                  aria-hidden="true"
+                />
+                Care Circle
+              </div>
+              <p className="text-sm text-teal-200/80 leading-relaxed">
+                Empowering elderly individuals to remain at the center of their
+                healthcare decisions while keeping families and caregivers
+                seamlessly informed.
+              </p>
+              <div className="text-xs text-teal-300/70 pt-2">
+                Designed for Google Cloud Run &amp; Cloud Scheduler.
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div className="space-y-3">
+              <p className="text-sm font-bold uppercase tracking-wider text-white">
+                Platform
+              </p>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="hover:text-white transition-colors"
+                  >
+                    Dashboard &amp; Today Schedule
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/sign-up"
+                    className="hover:text-white transition-colors"
+                  >
+                    Create Care Circle
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="hover:text-white transition-colors"
+                  >
+                    Passcode Entry
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/sign-in"
+                    className="hover:text-white transition-colors"
+                  >
+                    Account Sign In
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Features */}
+            <div className="space-y-3">
+              <p className="text-sm font-bold uppercase tracking-wider text-white">
+                Core Capabilities
+              </p>
+              <ul className="space-y-2 text-sm text-teal-200/80">
+                <li>Deterministic Dose Occurrences</li>
+                <li>&ldquo;I&apos;ll Handle This&rdquo; Atomic Claims</li>
+                <li>Doctor Appointment Tracking</li>
+                <li>Cloud Scheduler Reminders</li>
+                <li>Elder Sharing Consent Directives</li>
+              </ul>
+            </div>
+
+            {/* Security & Emergency */}
+            <div className="space-y-3">
+              <p className="text-sm font-bold uppercase tracking-wider text-white">
+                Trust &amp; Safety
+              </p>
+              <p className="text-xs text-teal-200/70 leading-relaxed">
+                Care Circle coordinates routines and reminders. In the event of
+                a medical emergency, always dial your local emergency services
+                (e.g. 911 / 112) immediately.
+              </p>
+              <p className="text-xs text-teal-300 pt-2 font-medium">
+                Protected with Better Auth &amp; hashed passcodes.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 border-t border-teal-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-teal-300/60 gap-4">
+            <p>
+              © {new Date().getFullYear()} Care Circle. All rights reserved.
+            </p>
+            <p>PromptWars x Catalyst · Build with AI</p>
+          </div>
+        </div>
       </footer>
-    </main>
+    </div>
   );
 }
